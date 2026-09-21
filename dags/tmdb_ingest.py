@@ -1,12 +1,12 @@
 """
 ### Pipeline TMDb — Ciencia de Datos, UTN FRM 2026
 
-Construye el dataset de películas para predecir éxito de crítica
+Construye el dataset de películas balanceado (éxitos, fracasos y taquilla)
 a partir de la API oficial de The Movie Database (TMDb).
 
 Capas del modelo medallón:
   * Bronce (land_bronze): Payloads JSON tal como los devolvió TMDb, comprimidos.
-  * Plata (refine_silver + consolidate / load_frozen): Filas tipadas (14 columnas), deduplicadas y validadas.
+  * Plata (refine_silver + consolidate / load_frozen): Filas tipadas (18 columnas), deduplicadas y validadas.
 """
 from __future__ import annotations
 
@@ -15,13 +15,14 @@ import json
 import logging
 import shutil
 from pathlib import Path
+from typing import Any
 
 import pendulum
-from airflow.sdk import Param, PokeReturnValue, dag, task
+from airflow.sdk import Param, dag, task
 from airflow.utils.trigger_rule import TriggerRule
 
 from tmdb import schema
-from tmdb.client import fetch_movie_payload, fetch_popular_movie_ids
+from tmdb.client import fetch_movie_ids, fetch_movie_payload
 from tmdb.transform import to_row
 
 log = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ def bronze_read(ruta: Path) -> dict:
             "subset",
             enum=["subset", "full"],
             title="Modo de corrida",
-            description="subset: 5 páginas (~100 películas). full: 175 páginas (~3.500 películas).",
+            description="subset: 6 páginas de prueba (~120 películas). full: 500 páginas balanceadas (~10.000 películas).",
         ),
         "force": Param(
             False,
@@ -81,7 +82,7 @@ def tmdb_ingest():
     def check_source_and_branch() -> str:
         """Verifica disponibilidad de la API y bifurca a la rama viva o frozen."""
         try:
-            ids = fetch_popular_movie_ids(page=1, min_votes=100)
+            ids = fetch_movie_ids(page=1, min_votes=100)
             if ids and len(ids) > 0:
                 log.info("API TMDb respondiendo correctamente (%s IDs). Rama viva.", len(ids))
                 return "discover_batches"
@@ -117,20 +118,75 @@ def tmdb_ingest():
         return str(destino)
 
     @task
-    def discover_batches(**context) -> list[int]:
-        """Define la lista de páginas a procesar según el modo."""
+    def discover_batches(**context) -> list[dict[str, Any]]:
+        """Recolecta exactamente N IDs unicos usando muestreo estratificado diferencial."""
         params = context["params"]
-        pages_count = 5 if params["mode"] == "subset" else 175
-        pages = list(range(1, pages_count + 1))
-        log.info("Modo %s: generando %s tareas de lote.", params["mode"], len(pages))
-        return pages
+        modo = params["mode"]
+        target_ids = 120 if modo == "subset" else 10000
+
+        # Estrategias ordenadas con sus cuotas objetivo
+        if modo == "subset":
+            estrategias = [
+                {"sort_by": "popularity.desc", "extra": None, "cuota": 40},
+                {"sort_by": "vote_average.asc", "extra": {"vote_average.gte": 1.0}, "cuota": 40},
+                {"sort_by": "revenue.desc", "extra": None, "cuota": 40},
+            ]
+        else:
+            estrategias = [
+                # 4.000 de alta popularidad
+                {"sort_by": "popularity.desc", "extra": None, "cuota": 4000},
+                # 3.000 con bajas calificaciones (crítica)
+                {"sort_by": "vote_average.asc", "extra": {"vote_average.gte": 1.0}, "cuota": 3000},
+                # 3.000 de alta taquilla / revenue
+                {"sort_by": "revenue.desc", "extra": None, "cuota": 3000},
+            ]
+
+        seen_ids: set[int] = set()
+        unique_ids: list[int] = []
+
+        for strat in estrategias:
+            recolectados_en_estrategia = 0
+            page = 1
+            # Itera paginas hasta cumplir la cuota o agotar las 500 paginas que permite TMDb
+            while recolectados_en_estrategia < strat["cuota"] and page <= 500:
+                nuevos_ids = fetch_movie_ids(
+                    page=page,
+                    sort_by=strat["sort_by"],
+                    min_votes=100,
+                    extra_params=strat["extra"],
+                )
+                if not nuevos_ids:
+                    break
+
+                for m_id in nuevos_ids:
+                    if m_id not in seen_ids:
+                        seen_ids.add(m_id)
+                        unique_ids.append(m_id)
+                        recolectados_en_estrategia += 1
+                        if recolectados_en_estrategia >= strat["cuota"] or len(unique_ids) >= target_ids:
+                            break
+                page += 1
+
+        log.info("Total recolectado de forma diferencial: %s IDs unicos.", len(unique_ids))
+
+        # Particionar en lotes de 20 IDs para dynamic task mapping
+        batch_size = 20
+        batches = []
+        for i in range(0, len(unique_ids), batch_size):
+            chunk = unique_ids[i : i + batch_size]
+            batches.append({
+                "batch_id": f"batch_{i // batch_size:04d}",
+                "movie_ids": chunk,
+            })
+
+        return batches
 
     @task(retries=2, retry_delay=pendulum.duration(seconds=10))
-    def land_bronze(page: int, **context) -> dict:
+    def land_bronze(batch: dict[str, Any], **context) -> dict[str, Any]:
         """Capa Bronce: Persiste cada payload JSON crudo comprimido."""
         params = context["params"]
         force = params["force"]
-        movie_ids = fetch_popular_movie_ids(page=page, min_votes=100)
+        movie_ids = batch["movie_ids"]
         archivos = []
 
         for m_id in movie_ids:
@@ -144,13 +200,13 @@ def tmdb_ingest():
                 bronze_write(destino, payload)
                 archivos.append(str(destino))
             except Exception as e:
-                log.error("Error al obtener película ID %s: %s", m_id, e)
+                log.error("Error al obtener pelicula ID %s: %s", m_id, e)
 
-        log.info("Página %s: %s películas procesadas en bronce.", page, len(archivos))
-        return {"page": page, "files": archivos}
+        log.info("Lote %s: %s peliculas procesadas en bronce.", batch["batch_id"], len(archivos))
+        return {"batch_id": batch["batch_id"], "files": archivos}
 
     @task
-    def refine_silver(lote: dict) -> str:
+    def refine_silver(lote: dict[str, Any]) -> str:
         """Capa Plata: Convierte de Bronce a formato tabular parcial."""
         import pandas as pd
 
@@ -162,7 +218,7 @@ def tmdb_ingest():
                 filas.append(fila)
 
         PARTIAL_DIR.mkdir(parents=True, exist_ok=True)
-        destino = PARTIAL_DIR / f"lote_pagina_{lote['page']:04d}.csv"
+        destino = PARTIAL_DIR / f"lote_{lote['batch_id']}.csv"
         pd.DataFrame(filas, columns=schema.COLUMNS).to_csv(destino, index=False)
         log.info("Parcial generado -> %s (%s registros)", destino.name, len(filas))
         return str(destino)
@@ -199,7 +255,6 @@ def tmdb_ingest():
         """Chequeos de integridad y reglas Tidy sobre _consolidado.csv."""
         import pandas as pd
 
-        # Ambas ramas dejan el archivo en _consolidado.csv
         ruta_archivo = OUTPUT_DIR / "_consolidado.csv"
         if not ruta_archivo.exists():
             raise FileNotFoundError(f"No existe el archivo a validar en {ruta_archivo}")
@@ -209,7 +264,7 @@ def tmdb_ingest():
         params = context["params"]
         modo = params.get("mode", "subset")
 
-        min_filas_esperadas = 3000 if modo == "full" else 80
+        min_filas_esperadas = 7000 if modo == "full" else 60
         if len(df) < min_filas_esperadas:
             problemas.append(
                 f"Volumen de datos insuficiente para modo '{modo}': "
@@ -250,10 +305,9 @@ def tmdb_ingest():
         destino_entregable = OUTPUT_DIR / f"movies_{ds}.csv"
         destino_cache = FROZEN_DIR / "ultimo_ok.csv"
 
-        # copyfile copia el contenido sin tocar permisos/metadatos del OS
         shutil.copyfile(ruta, destino_entregable)
         shutil.copyfile(ruta, destino_cache)
-        
+
         log.info("Entregable generado en -> %s (Caché local actualizada)", destino_entregable)
         return str(destino_entregable)
 
@@ -262,7 +316,7 @@ def tmdb_ingest():
 
     # Rama viva
     batches = discover_batches()
-    bronces = land_bronze.expand(page=batches)
+    bronces = land_bronze.expand(batch=batches)
     parciales = refine_silver.expand(lote=bronces)
     consolidado = consolidate(parciales)
 

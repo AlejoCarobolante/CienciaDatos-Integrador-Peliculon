@@ -25,11 +25,25 @@ def primary_genre(genres: list[dict] | None) -> str:
     return "Unknown"
 
 
+def secondary_genre(genres: list[dict] | None) -> str:
+    """Toma el segundo género de la lista si existe."""
+    if genres and isinstance(genres, list) and len(genres) > 1:
+        return str(genres[1].get("name", "None"))
+    return "None"
+
+
 def primary_company(companies: list[dict] | None) -> str:
     """Toma la primera productora del listado."""
     if companies and isinstance(companies, list) and len(companies) > 0:
         return str(companies[0].get("name", "Unknown"))
     return "Unknown"
+
+
+def co_production_company(companies: list[dict] | None) -> str:
+    """Toma la segunda productora si existe."""
+    if companies and isinstance(companies, list) and len(companies) > 1:
+        return str(companies[1].get("name", "None"))
+    return "None"
 
 
 def director_popularity(crew: list[dict] | None) -> float:
@@ -55,6 +69,16 @@ def lead_actor_popularity(cast: list[dict] | None) -> float:
         return 0.0
 
 
+def co_star_popularity(cast: list[dict] | None) -> float:
+    """Extrae la popularidad del segundo actor coprotagónico (order == 1)."""
+    if not cast or not isinstance(cast, list) or len(cast) < 2:
+        return 0.0
+    try:
+        return float(cast[1].get("popularity", 0.0))
+    except (ValueError, TypeError):
+        return 0.0
+
+
 def to_row(raw: dict[str, Any]) -> dict[str, Any]:
     """Transforma el JSON de una película a una fila del esquema canónico."""
     r = {c: None for c in schema.COLUMNS}
@@ -73,17 +97,25 @@ def to_row(raw: dict[str, Any]) -> dict[str, Any]:
         r["budget"] = 0.0
 
     try:
+        r["revenue"] = float(raw.get("revenue", 0.0))
+    except (ValueError, TypeError):
+        r["revenue"] = 0.0
+
+    try:
         r["runtime"] = int(raw.get("runtime") or 0)
     except (ValueError, TypeError):
         r["runtime"] = 0
 
     r["original_language"] = raw.get("original_language")
     r["primary_genre"] = primary_genre(raw.get("genres"))
+    r["secondary_genre"] = secondary_genre(raw.get("genres"))
     r["primary_production_company"] = primary_company(raw.get("production_companies"))
+    r["co_production_company"] = co_production_company(raw.get("production_companies"))
 
     credits = raw.get("credits") or {}
     r["director_popularity"] = director_popularity(credits.get("crew"))
     r["lead_actor_popularity"] = lead_actor_popularity(credits.get("cast"))
+    r["co_star_popularity"] = co_star_popularity(credits.get("cast"))
 
     try:
         r["vote_average"] = float(raw.get("vote_average", 0.0))

@@ -1,4 +1,4 @@
-# bloques del esquema, en el orden en que salen al CSV
+# Bloques del esquema, en el orden en que salen al CSV
 
 IDENTIDAD = [
     "movie_id",
@@ -13,15 +13,19 @@ TEMPORAL = [
 
 PRODUCCION = [
     "budget",
+    "revenue",
     "runtime",
     "original_language",
     "primary_genre",
+    "secondary_genre",
     "primary_production_company",
+    "co_production_company",
 ]
 
 TALENTO = [
     "director_popularity",
     "lead_actor_popularity",
+    "co_star_popularity",
 ]
 
 VALORACION = [
@@ -31,7 +35,7 @@ VALORACION = [
 
 COLUMNS = IDENTIDAD + TEMPORAL + PRODUCCION + TALENTO + VALORACION
 
-# tipos, para validar y para castear al final
+# Tipos para validar y castear al final
 
 ENTEROS = [
     "movie_id",
@@ -44,8 +48,10 @@ ENTEROS = [
 
 FLOTANTES = [
     "budget",
+    "revenue",
     "director_popularity",
     "lead_actor_popularity",
+    "co_star_popularity",
     "vote_average",
 ]
 
@@ -53,14 +59,17 @@ TEXTO = [
     "title",
     "original_language",
     "primary_genre",
+    "secondary_genre",
     "primary_production_company",
+    "co_production_company",
 ]
 
-# Columnas sin las cuales la fila no sirve para el modelado.
+# Columnas sin las cuales la fila no sirve para el modelado
 OBLIGATORIAS = [
     "movie_id",
     "title",
     "budget",
+    "revenue",
     "runtime",
     "vote_average",
     "vote_count",
