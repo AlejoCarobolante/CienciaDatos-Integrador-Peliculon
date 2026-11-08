@@ -1,45 +1,123 @@
-Overview
-========
+# Peliculón · ¿Cuántas veces recupera una película lo que costó?
 
-Welcome to Astronomer! This project was generated after you ran 'astro dev init' using the Astronomer CLI. This readme describes the contents of the project, as well as how to run Apache Airflow on your local machine.
+Proyecto integrador de Ciencia de Datos · UTN FRM 2026.
 
-Project Contents
-================
+**La pregunta:** con lo que se sabe *antes del estreno* (presupuesto, género, idioma, duración, productora, elenco y
+fecha), ¿podemos anticipar cuántas veces recupera una película lo que costó?
 
-Your Astro project contains the following files and folders:
+**El hallazgo:** sí, pero poco. En películas de 2017–2025 que nunca vio, el modelo (un Random Forest ajustado)
+anticipa el múltiplo `recaudación / presupuesto` con un error típico de **×2,86**, un **7%** menos que adivinar
+siempre la mediana (×3,11). Lo que más pesa es el presupuesto: las películas baratas multiplican mucho más lo que
+cuestan (mediana ×18 con menos de 1 millón de dólares, ×2 entre 10 y 100 millones).
 
-- dags: This folder contains the Python files for your Airflow DAGs. By default, this directory includes one example DAG:
-    - `example_astronauts`: This DAG shows a simple ETL pipeline example that queries the list of astronauts currently in space from the Open Notify API and prints a statement for each astronaut. The DAG uses the TaskFlow API to define tasks in Python, and dynamic task mapping to dynamically print a statement for each astronaut. For more on how this DAG works, see our [Getting started tutorial](https://www.astronomer.io/docs/learn/get-started-with-airflow).
-- Dockerfile: This file contains a versioned Astro Runtime Docker image that provides a differentiated Airflow experience. If you want to execute other commands or overrides at runtime, specify them here.
-- include: This folder contains any additional files that you want to include as part of your project. It is empty by default.
-- packages.txt: Install OS-level packages needed for your project by adding them to this file. It is empty by default.
-- requirements.txt: Install Python packages needed for your project by adding them to this file. It is empty by default.
-- plugins: Add custom or community plugins for your project to this file. It is empty by default.
-- airflow_settings.yaml: Use this local-only file to specify Airflow Connections, Variables, and Pools instead of entering them in the Airflow UI as you develop DAGs in this project.
+**App:** _pendiente de publicar en Streamlit Community Cloud_ (ver [Cómo se publica](#cómo-se-publica)).
 
-Deploy Your Project Locally
-===========================
+---
 
-Start Airflow on your local machine by running 'astro dev start'.
+## Estructura del repo
 
-This command will spin up five Docker containers on your machine, each for a different Airflow component:
+```
+dags/tmdb_ingest.py          DAG de Airflow: TMDb -> bronce -> plata -> include/output/movies_<fecha>.csv
+include/tmdb/                cliente de la API, esquema y transformación JSON -> fila
+include/frozen/ultimo_ok.csv dataset versionado (corrida full del 24/10/2026: 9.940 películas x 18 columnas)
+include/output/              corridas propias del DAG (en .gitignore: no se sube)
+include/modelo/              lógica compartida por el notebook, build_app.py y la app
+  features.py                carga, filtros de alcance, objetivo y features derivadas
+  entrenar.py                columnas, pipeline, partición temporal, candidatos, grilla y comparaciones
+  analisis.py                números de las fichas de hipótesis de la Entrega 2
+presentacion2.ipynb          Entrega 2: análisis (fichas de hipótesis y chequeo de fuga)
+presentacion3.ipynb          Entrega 3: modelo (corregido y guardado con salidas)
+build_app.py                 de los datos a la app: entrena el modelo final y genera app/artefactos/
+app/streamlit_app.py         la app (Entrega 4)
+app/estilo.py                colores, escalas y formatos de todos los gráficos
+app/artefactos/              modelo.joblib, referencias.joblib, metricas.json, predicciones.parquet, rangos.json
+app/requirements.txt         dependencias fijadas de la app (las usa Streamlit Cloud)
+.streamlit/config.toml       tema de la app
+requirements.txt             dependencias del contenedor de Airflow (no tocar para la app)
+requirements-notebooks.txt   dependencias para correr los notebooks y build_app.py
+```
 
-- Postgres: Airflow's Metadata Database
-- Scheduler: The Airflow component responsible for monitoring and triggering tasks
-- DAG Processor: The Airflow component responsible for parsing DAGs
-- API Server: The Airflow component responsible for serving the Airflow UI and API
-- Triggerer: The Airflow component responsible for triggering deferred tasks
+## 1. Correr el pipeline (Entrega 1)
 
-When all five containers are ready the command will open the browser to the Airflow UI at http://localhost:8080/. You should also be able to access your Postgres Database at 'localhost:5432/postgres' with username 'postgres' and password 'postgres'.
+Requisitos: Docker y la [CLI de Astronomer](https://www.astronomer.io/docs/astro/cli/install-cli).
 
-Note: If you already have either of the above ports allocated, you can either [stop your existing Docker containers or change the port](https://www.astronomer.io/docs/astro/cli/troubleshoot-locally#ports-are-not-available-for-my-local-airflow-webserver).
+1. Crear un archivo `.env` en la raíz (está en `.gitignore`; **no se sube**):
+   ```
+   TMDB_API_KEY=<tu clave de https://www.themoviedb.org/settings/api>
+   BASE_URL=https://api.themoviedb.org/3
+   ```
+2. Levantar Airflow:
+   ```bash
+   astro dev start
+   ```
+3. En http://localhost:8080, disparar el DAG **`tmdb_ingest`** con el parámetro `mode = full`
+   (`subset` baja ~120 películas para probar).
+4. El DAG hace muestreo estratificado (4.000 más populares, 3.000 peor calificadas y 3.000 de mayor taquilla, todas
+   con al menos 100 votos), guarda el JSON crudo en la capa bronce, arma la capa plata (18 columnas, sin duplicados,
+   validada) y publica `include/output/movies_<fecha>.csv`. También actualiza `include/frozen/ultimo_ok.csv`, que
+   usa como respaldo si la API no responde.
 
-Deploy Your Project to Astronomer
-=================================
+## 2. Correr los notebooks (Entregas 2 y 3)
 
-If you have an Astronomer account, pushing code to a Deployment on Astronomer is simple. For deploying instructions, refer to Astronomer documentation: https://www.astronomer.io/docs/astro/deploy-code/
+Con Python 3.12:
 
-Contact
-=======
+```bash
+python -m venv .venv
+.venv/Scripts/activate          # Windows (en Linux/Mac: source .venv/bin/activate)
+pip install -r requirements-notebooks.txt
+```
 
-The Astronomer CLI is maintained with love by the Astronomer team. To report a bug or suggest a change, reach out to our support.
+Los notebooks leen el CSV más reciente de `include/output/movies_*.csv`. Si no corriste el DAG, copiá el congelado:
+
+```bash
+mkdir -p include/output
+cp include/frozen/ultimo_ok.csv include/output/movies_2026-10-24.csv
+```
+
+Después, desde la raíz del repo:
+
+```bash
+jupyter nbconvert --to notebook --execute --inplace presentacion3.ipynb
+```
+
+(o abrirlos con `jupyter lab` y correr todo). `presentacion3.ipynb` importa la lógica de `include/modelo/`, así que
+se ejecuta desde la raíz.
+
+## 3. Regenerar la app
+
+```bash
+python build_app.py
+streamlit run app/streamlit_app.py
+```
+
+`build_app.py` toma el CSV más reciente (o `include/frozen/ultimo_ok.csv` si no hay ninguno), aplica los mismos
+filtros, features, partición temporal, pipeline y semilla (42) que el notebook, entrena el Random Forest ajustado con
+el 80% de entrenamiento y guarda los artefactos en `app/artefactos/`. Al final controla que el MAE de test coincida con
+el que imprimió el notebook:
+
+```
+MAE test notebook = 0.4569 | MAE test build_app = 0.4569
+```
+
+Si no coinciden, el script falla. **Si cambian los datos:** correr el DAG, ejecutar `presentacion3.ipynb` (paso 2) y
+después `python build_app.py`. Commitear `presentacion3.ipynb` y `app/artefactos/`: Streamlit Cloud no corre ni el DAG
+ni el entrenamiento, solo lee los artefactos.
+
+## Cómo se publica
+
+La app está en Streamlit Community Cloud, conectada a este repositorio:
+
+| Campo | Valor |
+|---|---|
+| Repository | `AlejoCarobolante/CienciaDatos-Integrador-Peliculon` |
+| Branch | `presentacion4` |
+| Main file path | `app/streamlit_app.py` |
+| Python version (Advanced settings) | 3.12 |
+| Dependencias | `app/requirements.txt` (Cloud lo busca primero en la carpeta del archivo principal) |
+
+Cada push a la rama vuelve a desplegar la app. No hace falta ningún secreto: la app no llama a la API de TMDb.
+
+---
+
+Datos: [TMDb](https://www.themoviedb.org/). Este producto usa la API de TMDb pero no está avalado ni certificado por
+TMDb.
