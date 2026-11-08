@@ -1,0 +1,13 @@
+# Tema claro fijo: los colores de app/estilo.py se validaron contra la superficie clara.
+[theme]
+base = "light"
+primaryColor = "#6250d6"
+backgroundColor = "#fcfcfb"
+secondaryBackgroundColor = "#f3f2ee"
+textColor = "#0b0b0b"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false
