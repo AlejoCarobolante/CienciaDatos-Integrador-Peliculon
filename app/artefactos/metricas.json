@@ -1,0 +1,871 @@
+{
+ "generado": "2026-11-08",
+ "datos": {
+  "csv": "include/output/movies_2026-10-24.csv",
+  "fecha": "2026-10-24",
+  "filas": 9940,
+  "columnas": 18,
+  "columnas_fuga": [
+   "revenue",
+   "vote_average",
+   "vote_count"
+  ]
+ },
+ "entorno": {
+  "python": "3.12.16",
+  "scikit_learn": "1.9.1",
+  "pandas": "3.1.1",
+  "seed": 42
+ },
+ "embudo": [
+  {
+   "paso": "Dataset completo",
+   "filas": 9940,
+   "motivo": "Todas las películas que bajó el DAG de TMDb."
+  },
+  {
+   "paso": "Con budget y revenue > 0",
+   "filas": 6528,
+   "motivo": "Sin los dos montos no hay ROI. No se imputa: inventar un presupuesto es inventar el objetivo."
+  },
+  {
+   "paso": "Con budget >= 10.000 USD",
+   "filas": 6522,
+   "motivo": "Presupuestos de 1, 2 o 7 dólares son errores de carga de TMDb."
+  },
+  {
+   "paso": "Con revenue >= 10.000 USD",
+   "filas": 6500,
+   "motivo": "Recaudaciones imposibles (estrenos de streaming sin taquilla o errores de carga)."
+  },
+  {
+   "paso": "Estrenadas antes de 2026",
+   "filas": 6391,
+   "motivo": "Las de 2026 siguen en cartelera: su revenue está incompleto."
+  }
+ ],
+ "particion": {
+  "n_alcance": 6391,
+  "n_train": 5113,
+  "n_test": 1278,
+  "anios_train": [
+   1915,
+   2017
+  ],
+  "anios_test": [
+   2017,
+   2025
+  ],
+  "folds": [
+   {
+    "fold": 1,
+    "entrena": "1915-1988",
+    "n_entrena": 853,
+    "valida": "1988-1997",
+    "n_valida": 852
+   },
+   {
+    "fold": 2,
+    "entrena": "1915-1997",
+    "n_entrena": 1705,
+    "valida": "1997-2003",
+    "n_valida": 852
+   },
+   {
+    "fold": 3,
+    "entrena": "1915-2003",
+    "n_entrena": 2557,
+    "valida": "2003-2008",
+    "n_valida": 852
+   },
+   {
+    "fold": 4,
+    "entrena": "1915-2008",
+    "n_entrena": 3409,
+    "valida": "2008-2012",
+    "n_valida": 852
+   },
+   {
+    "fold": 5,
+    "entrena": "1915-2012",
+    "n_entrena": 4261,
+    "valida": "2012-2017",
+    "n_valida": 852
+   }
+  ]
+ },
+ "roi": {
+  "mediana": 1.4016920322580646,
+  "p99": 65.97554888571439,
+  "max": 12889.386666666667,
+  "titulo_max": "Paranormal Activity",
+  "mae_crudo_por_fold": [
+   4.596560956113313,
+   7.253407466770901,
+   3.8416924350403963,
+   17.801621569464192,
+   4.3030553711531105
+  ]
+ },
+ "modelos": [
+  {
+   "modelo": "Piso (mediana)",
+   "mae_cv": 0.4261988208405933,
+   "desvio_cv": 0.034217360936663825,
+   "factor_cv": 2.6680798370012826,
+   "mae_kfold_azar": 0.4176540974470361,
+   "mae_test": 0.49303598171967744,
+   "r2_test": -0.046986890553544436,
+   "es_final": false,
+   "mejora_vs_ridge": -0.023064054368411913,
+   "desvio_mejora_vs_ridge": 0.03694723747762682,
+   "folds_gana_vs_ridge": "2 de 5",
+   "supera_ruido_vs_ridge": false
+  },
+  {
+   "modelo": "Ridge",
+   "mae_cv": 0.4031347664721814,
+   "desvio_cv": 0.020937540159743844,
+   "factor_cv": 2.530082987908877,
+   "mae_kfold_azar": 0.3826116795706014,
+   "mae_test": 0.455966647414651,
+   "r2_test": 0.1385289897176939,
+   "es_final": false,
+   "mejora_vs_piso": 0.023064054368411913,
+   "desvio_mejora_vs_piso": 0.03694723747762682,
+   "folds_gana_vs_piso": "3 de 5",
+   "supera_ruido_vs_piso": false
+  },
+  {
+   "modelo": "Random Forest",
+   "mae_cv": 0.3852697028843531,
+   "desvio_cv": 0.022936578651557335,
+   "factor_cv": 2.428117521556197,
+   "mae_kfold_azar": 0.37180863404697057,
+   "mae_test": 0.45386423123078057,
+   "r2_test": 0.12136598246582653,
+   "es_final": false,
+   "mejora_vs_piso": 0.040929117956240234,
+   "desvio_mejora_vs_piso": 0.037294309128184704,
+   "folds_gana_vs_piso": "5 de 5",
+   "supera_ruido_vs_piso": true,
+   "mejora_vs_ridge": 0.01786506358782832,
+   "desvio_mejora_vs_ridge": 0.0025329543946880527,
+   "folds_gana_vs_ridge": "5 de 5",
+   "supera_ruido_vs_ridge": true
+  },
+  {
+   "modelo": "HistGB (absolute_error)",
+   "mae_cv": 0.37847254646466244,
+   "desvio_cv": 0.021327693016629682,
+   "factor_cv": 2.3904108228967513,
+   "mae_kfold_azar": 0.3638461491830889,
+   "mae_test": 0.45529625674025814,
+   "r2_test": 0.07361115450550049,
+   "es_final": false,
+   "mejora_vs_piso": 0.047726274375930924,
+   "desvio_mejora_vs_piso": 0.03201836850183927,
+   "folds_gana_vs_piso": "5 de 5",
+   "supera_ruido_vs_piso": true,
+   "mejora_vs_ridge": 0.02466222000751901,
+   "desvio_mejora_vs_ridge": 0.007214865214294208,
+   "folds_gana_vs_ridge": "5 de 5",
+   "supera_ruido_vs_ridge": true
+  },
+  {
+   "modelo": "Random Forest ajustado",
+   "mae_cv": 0.3841863923448918,
+   "desvio_cv": 0.023096359033207357,
+   "factor_cv": 2.422068337242618,
+   "mae_kfold_azar": null,
+   "mae_test": 0.45688316074788377,
+   "r2_test": 0.11329983475267669,
+   "es_final": true,
+   "mejora_vs_piso": 0.04201242849570146,
+   "desvio_mejora_vs_piso": 0.03811317994918337,
+   "folds_gana_vs_piso": "5 de 5",
+   "supera_ruido_vs_piso": true,
+   "mejora_vs_ridge": 0.018948374127289547,
+   "desvio_mejora_vs_ridge": 0.0022602205467662615,
+   "folds_gana_vs_ridge": "5 de 5",
+   "supera_ruido_vs_ridge": true
+  }
+ ],
+ "folds": [
+  {
+   "modelo": "Piso (mediana)",
+   "fold": 1,
+   "mae": 0.49088818893850567
+  },
+  {
+   "modelo": "Piso (mediana)",
+   "fold": 2,
+   "mae": 0.413755863274215
+  },
+  {
+   "modelo": "Piso (mediana)",
+   "fold": 3,
+   "mae": 0.38949873083264014
+  },
+  {
+   "modelo": "Piso (mediana)",
+   "fold": 4,
+   "mae": 0.4232659478606141
+  },
+  {
+   "modelo": "Piso (mediana)",
+   "fold": 5,
+   "mae": 0.41358537329699174
+  },
+  {
+   "modelo": "Ridge",
+   "fold": 1,
+   "mae": 0.4005480499795194
+  },
+  {
+   "modelo": "Ridge",
+   "fold": 2,
+   "mae": 0.381342531112896
+  },
+  {
+   "modelo": "Ridge",
+   "fold": 3,
+   "mae": 0.3795526147445839
+  },
+  {
+   "modelo": "Ridge",
+   "fold": 4,
+   "mae": 0.4285398720779231
+  },
+  {
+   "modelo": "Ridge",
+   "fold": 5,
+   "mae": 0.42569076444598464
+  },
+  {
+   "modelo": "Random Forest",
+   "fold": 1,
+   "mae": 0.38379250294596157
+  },
+  {
+   "modelo": "Random Forest",
+   "fold": 2,
+   "mae": 0.36133058281260017
+  },
+  {
+   "modelo": "Random Forest",
+   "fold": 3,
+   "mae": 0.3587304369212126
+  },
+  {
+   "modelo": "Random Forest",
+   "fold": 4,
+   "mae": 0.4104906877871394
+  },
+  {
+   "modelo": "Random Forest",
+   "fold": 5,
+   "mae": 0.41200430395485177
+  },
+  {
+   "modelo": "HistGB (absolute_error)",
+   "fold": 1,
+   "mae": 0.38727258668074216
+  },
+  {
+   "modelo": "HistGB (absolute_error)",
+   "fold": 2,
+   "mae": 0.3517397967112807
+  },
+  {
+   "modelo": "HistGB (absolute_error)",
+   "fold": 3,
+   "mae": 0.3555343844315372
+  },
+  {
+   "modelo": "HistGB (absolute_error)",
+   "fold": 4,
+   "mae": 0.4066828932125603
+  },
+  {
+   "modelo": "HistGB (absolute_error)",
+   "fold": 5,
+   "mae": 0.3911330712871917
+  },
+  {
+   "modelo": "Random Forest ajustado",
+   "fold": 1,
+   "mae": 0.38107216306382063
+  },
+  {
+   "modelo": "Random Forest ajustado",
+   "fold": 2,
+   "mae": 0.359582866547363
+  },
+  {
+   "modelo": "Random Forest ajustado",
+   "fold": 3,
+   "mae": 0.3588308717153331
+  },
+  {
+   "modelo": "Random Forest ajustado",
+   "fold": 4,
+   "mae": 0.4113895036328914
+  },
+  {
+   "modelo": "Random Forest ajustado",
+   "fold": 5,
+   "mae": 0.4100565567650512
+  }
+ ],
+ "histgb_vs_final": {
+  "comparación": "HistGB (absolute_error) vs Random Forest ajustado",
+  "mejora media": 0.005713845880229463,
+  "desvío de la mejora": 0.00809735927892079,
+  "folds que gana": "4 de 5",
+  "supera el ruido": 0.0
+ },
+ "grilla": {
+  "mejores": {
+   "max_features": 0.3,
+   "min_samples_leaf": 10
+  },
+  "tabla": [
+   {
+    "min_samples_leaf": 10,
+    "max_features": 0.3,
+    "mae": 0.3841863923448918,
+    "desvio": 0.023096359033207357
+   },
+   {
+    "min_samples_leaf": 20,
+    "max_features": 0.3,
+    "mae": 0.38478218916294943,
+    "desvio": 0.0240460538053224
+   },
+   {
+    "min_samples_leaf": 40,
+    "max_features": 0.3,
+    "mae": 0.3850597629586907,
+    "desvio": 0.02397659642028897
+   },
+   {
+    "min_samples_leaf": 5,
+    "max_features": 0.3,
+    "mae": 0.3852697028843531,
+    "desvio": 0.022936578651557335
+   },
+   {
+    "min_samples_leaf": 40,
+    "max_features": 0.6,
+    "mae": 0.3857152415723083,
+    "desvio": 0.023067665424884466
+   },
+   {
+    "min_samples_leaf": 20,
+    "max_features": 0.6,
+    "mae": 0.38593685119337434,
+    "desvio": 0.02242316827854285
+   },
+   {
+    "min_samples_leaf": 40,
+    "max_features": 1.0,
+    "mae": 0.3866154621214339,
+    "desvio": 0.022539533866009643
+   },
+   {
+    "min_samples_leaf": 10,
+    "max_features": 0.6,
+    "mae": 0.38674343204557393,
+    "desvio": 0.023016520719345065
+   },
+   {
+    "min_samples_leaf": 5,
+    "max_features": 0.6,
+    "mae": 0.3870777654808648,
+    "desvio": 0.023088539274955883
+   },
+   {
+    "min_samples_leaf": 1,
+    "max_features": 0.3,
+    "mae": 0.387676662812086,
+    "desvio": 0.02520246640354542
+   },
+   {
+    "min_samples_leaf": 20,
+    "max_features": 1.0,
+    "mae": 0.38773188795256297,
+    "desvio": 0.02210802501071063
+   },
+   {
+    "min_samples_leaf": 10,
+    "max_features": 1.0,
+    "mae": 0.38852995716165434,
+    "desvio": 0.02298665355209637
+   },
+   {
+    "min_samples_leaf": 5,
+    "max_features": 1.0,
+    "mae": 0.389883271457753,
+    "desvio": 0.02310599104344633
+   },
+   {
+    "min_samples_leaf": 1,
+    "max_features": 0.6,
+    "mae": 0.3906150811505809,
+    "desvio": 0.025185641997830095
+   },
+   {
+    "min_samples_leaf": 1,
+    "max_features": 1.0,
+    "mae": 0.39264254710230795,
+    "desvio": 0.025665134660487074
+   }
+  ]
+ },
+ "final": {
+  "nombre": "Random Forest ajustado",
+  "params": {
+   "n_estimators": 300,
+   "random_state": 42,
+   "min_samples_leaf": 10,
+   "max_features": 0.3
+  },
+  "mae_cv": 0.3841863923448918,
+  "desvio_cv": 0.023096359033207357,
+  "mae_piso_cv": 0.4261988208405933,
+  "mae_test": 0.45688316074788377,
+  "factor_test": 2.8634075171048723,
+  "rmse_test": 0.6579100373931317,
+  "r2_test": 0.11329983475267669,
+  "mae_piso_test": 0.49303598171967744,
+  "factor_piso_test": 3.111974156507258,
+  "r2_piso_test": -0.046986890553544436,
+  "mejora_test_pct": 0.07332694227649468,
+  "mejora_cv_pct": 0.09857471781090389,
+  "mediana_piso_y": 0.3929304940725355
+ },
+ "por_tramo": [
+  {
+   "tramo": "Pérdida (ROI<0)",
+   "peliculas": 347,
+   "mae": 0.8687143637877743,
+   "roi_real_mediano": -0.57739466,
+   "roi_pred_mediano": 0.7985595011692326,
+   "sesgo": 0.8687143637877743
+  },
+  {
+   "tramo": "Recupera hasta 2x",
+   "peliculas": 252,
+   "mae": 0.18458002828180642,
+   "roi_real_mediano": 0.4114485662162162,
+   "roi_pred_mediano": 0.9618302645238398,
+   "sesgo": 0.1559733219453882
+  },
+  {
+   "tramo": "2x a 4x",
+   "peliculas": 306,
+   "mae": 0.15691430683531588,
+   "roi_real_mediano": 1.7895734796296296,
+   "roi_pred_mediano": 1.14519496011935,
+   "sesgo": -0.12146830085192269
+  },
+  {
+   "tramo": "4x a 11x",
+   "peliculas": 282,
+   "mae": 0.41173354990502065,
+   "roi_real_mediano": 4.759183450429353,
+   "roi_pred_mediano": 1.270269091123742,
+   "sesgo": -0.407274160579733
+  },
+  {
+   "tramo": "Más de 11x",
+   "peliculas": 91,
+   "mae": 0.7891647154901111,
+   "roi_real_mediano": 16.30134188888889,
+   "roi_pred_mediano": 2.0561149416906037,
+   "sesgo": -0.7800600940487505
+  }
+ ],
+ "fracasos_no_anticipados": [
+  {
+   "title": "Hellraiser",
+   "release_year": 2022,
+   "budget": 14000000.0,
+   "revenue": 10303.0,
+   "roi": -0.9992640714285714,
+   "roi_pred": 1.4170837114210588
+  },
+  {
+   "title": "Red Notice",
+   "release_year": 2021,
+   "budget": 160000000.0,
+   "revenue": 178143.0,
+   "roi": -0.99888660625,
+   "roi_pred": 1.1602506124536984
+  },
+  {
+   "title": "The Gray Man",
+   "release_year": 2022,
+   "budget": 200000000.0,
+   "revenue": 454023.0,
+   "roi": -0.997729885,
+   "roi_pred": 1.7785462543769999
+  },
+  {
+   "title": "The Killer",
+   "release_year": 2023,
+   "budget": 175000000.0,
+   "revenue": 362113.0,
+   "roi": -0.9979307828571429,
+   "roi_pred": 1.4313426958461695
+  },
+  {
+   "title": "Occupation",
+   "release_year": 2018,
+   "budget": 6000000.0,
+   "revenue": 21704.0,
+   "roi": -0.9963826666666666,
+   "roi_pred": 1.6682163567250603
+  }
+ ],
+ "exitos_no_anticipados": [
+  {
+   "title": "Secret Superstar",
+   "release_year": 2017,
+   "budget": 286284.0,
+   "revenue": 137416709.0,
+   "roi": 479.0013587905716,
+   "roi_pred": 7.489147494190567
+  },
+  {
+   "title": "Lost in the Stars",
+   "release_year": 2023,
+   "budget": 9500000.0,
+   "revenue": 334039200.0,
+   "roi": 34.16202105263158,
+   "roi_pred": -0.017958094955643933
+  },
+  {
+   "title": "Ne Zha 2",
+   "release_year": 2025,
+   "budget": 80000000.0,
+   "revenue": 2270700370.0,
+   "roi": 27.383754625,
+   "roi_pred": 0.3567664079445687
+  },
+  {
+   "title": "Get Out",
+   "release_year": 2017,
+   "budget": 4500000.0,
+   "revenue": 255407969.0,
+   "roi": 55.757326444444445,
+   "roi_pred": 2.0561149416906037
+  },
+  {
+   "title": "One Cut of the Dead",
+   "release_year": 2017,
+   "budget": 52406.0,
+   "revenue": 27590180.0,
+   "roi": 525.4698698622295,
+   "roi_pred": 28.76170625480234
+  }
+ ],
+ "importancia": [
+  {
+   "variable": "budget",
+   "aumento_mae": 0.021005782348373622,
+   "desvio": 0.0025649921714156814
+  },
+  {
+   "variable": "budget_vs_genre_median",
+   "aumento_mae": 0.009096779221661569,
+   "desvio": 0.0014060918898294152
+  },
+  {
+   "variable": "prod_hist_roi",
+   "aumento_mae": 0.007833809142174283,
+   "desvio": 0.0011448014648129164
+  },
+  {
+   "variable": "runtime",
+   "aumento_mae": 0.005277965615340783,
+   "desvio": 0.0019565698282670704
+  },
+  {
+   "variable": "primary_production_company",
+   "aumento_mae": 0.004996515784603206,
+   "desvio": 0.0008992100142421409
+  },
+  {
+   "variable": "original_language",
+   "aumento_mae": 0.0021359782289427894,
+   "desvio": 0.0003157502382394886
+  },
+  {
+   "variable": "director_leverage",
+   "aumento_mae": 0.0015734926838270546,
+   "desvio": 0.0010138735653225017
+  },
+  {
+   "variable": "primary_genre",
+   "aumento_mae": 0.0015057098847781891,
+   "desvio": 0.00035929943736589864
+  },
+  {
+   "variable": "director_vs_cast",
+   "aumento_mae": 0.0011083618820014796,
+   "desvio": 0.0006321396597171895
+  },
+  {
+   "variable": "lead_actor_popularity",
+   "aumento_mae": 0.0010640003202069953,
+   "desvio": 0.00042219767245688637
+  },
+  {
+   "variable": "director_popularity",
+   "aumento_mae": 0.0009749874057483315,
+   "desvio": 0.0006578888073503651
+  },
+  {
+   "variable": "secondary_genre",
+   "aumento_mae": 0.0009330386360489551,
+   "desvio": 0.0002809761371988909
+  },
+  {
+   "variable": "release_month",
+   "aumento_mae": 0.0008896036350172137,
+   "desvio": 0.0004014030155473536
+  },
+  {
+   "variable": "release_day_of_week",
+   "aumento_mae": 0.0007778552199199761,
+   "desvio": 0.0006178563441549407
+  },
+  {
+   "variable": "power_pack",
+   "aumento_mae": 0.0007562255126711631,
+   "desvio": 0.0003638319801666635
+  },
+  {
+   "variable": "co_production_company",
+   "aumento_mae": 0.000717735156503907,
+   "desvio": 0.00019517356278503606
+  },
+  {
+   "variable": "co_star_popularity",
+   "aumento_mae": 0.00026117285298913326,
+   "desvio": 0.0006739649664034248
+  },
+  {
+   "variable": "is_horror_low_budget",
+   "aumento_mae": 4.954975988627486e-06,
+   "desvio": 7.087412468033816e-05
+  },
+  {
+   "variable": "release_year",
+   "aumento_mae": 0.0,
+   "desvio": 0.0
+  },
+  {
+   "variable": "star_power_ratio",
+   "aumento_mae": -9.887407139198834e-05,
+   "desvio": 0.000496575098700064
+  }
+ ],
+ "popularidades": {
+  "spearman_vote_count": {
+   "director_popularity": 0.3288,
+   "lead_actor_popularity": 0.3445,
+   "co_star_popularity": 0.3332
+  },
+  "mae_test_con": 0.45688316074788377,
+  "mae_test_sin": 0.45526638550856774
+ },
+ "ablacion": [
+  {
+   "variante": "(todas las columnas)",
+   "mae": 0.3841863923448918,
+   "desvio": 0.023096359033207357,
+   "cambio": 0.0
+  },
+  {
+   "variante": "sin budget",
+   "mae": 0.3876145635712674,
+   "desvio": 0.023881431769591618,
+   "cambio": 0.003428171226375565
+  },
+  {
+   "variante": "sin popularidades (director y elenco)",
+   "mae": 0.38343227870269414,
+   "desvio": 0.023864114972611573,
+   "cambio": -0.0007541136421976846
+  },
+  {
+   "variante": "sin productoras",
+   "mae": 0.3857643516363872,
+   "desvio": 0.02335751575557919,
+   "cambio": 0.001577959291495401
+  },
+  {
+   "variante": "sin calendario (mes y día)",
+   "mae": 0.38719968767633495,
+   "desvio": 0.02342602655535384,
+   "cambio": 0.003013295331443122
+  },
+  {
+   "variante": "sin idioma",
+   "mae": 0.383789196269925,
+   "desvio": 0.023449668554655745,
+   "cambio": -0.0003971960749667991
+  },
+  {
+   "variante": "sin géneros",
+   "mae": 0.38537341918218176,
+   "desvio": 0.02370973075268655,
+   "cambio": 0.0011870268372899395
+  },
+  {
+   "variante": "sin runtime",
+   "mae": 0.3861653267065825,
+   "desvio": 0.0241963378184387,
+   "cambio": 0.001978934361690665
+  },
+  {
+   "variante": "sin release_year",
+   "mae": 0.38368730840025966,
+   "desvio": 0.02294234888279134,
+   "cambio": -0.0004990839446321615
+  }
+ ],
+ "entrega2": {
+  "universo": {
+   "con_montos": 6528,
+   "recortado_p99": 6462,
+   "total": 9940
+  },
+  "fichas": [
+   {
+    "id": 1,
+    "nombre": "Presupuesto y recaudación",
+    "afirmacion": "A mayor presupuesto, mayor recaudación.",
+    "esperado": "Pearson ≥ 0,60 entre presupuesto y recaudación",
+    "metrica": "Pearson entre log10(budget) y log10(revenue)",
+    "valor": 0.6108418632193882,
+    "umbral": 0.6,
+    "se_sostiene": true,
+    "pearson_logbudget_logrevenue": 0.6108418632193882,
+    "pearson_logbudget_roi": -0.34194855801008456,
+    "spearman_logbudget_roi": -0.2280617893410038
+   },
+   {
+    "id": 2,
+    "nombre": "Idioma original",
+    "afirmacion": "Las películas en inglés recuperan más que las del resto del mundo.",
+    "esperado": "Separación estandarizada > 0,80 a favor del inglés",
+    "metrica": "Separación estandarizada del ROI (inglés − resto) / s_p",
+    "valor": -0.2615249851294795,
+    "umbral": 0.8,
+    "se_sostiene": false,
+    "n_en": 5660,
+    "n_resto": 802,
+    "media_en": 3.004712171908431,
+    "media_resto": 4.680660842654305,
+    "mediana_en": 1.2744732936507936,
+    "mediana_resto": 2.12771143937845,
+    "separacion_estandarizada": -0.2615249851294795
+   },
+   {
+    "id": 3,
+    "nombre": "Género primario",
+    "afirmacion": "El género separa fuerte el ROI.",
+    "esperado": "η² > 0,25",
+    "metrica": "η² del ROI por género primario",
+    "valor": 0.01561484713186326,
+    "umbral": 0.25,
+    "se_sostiene": false,
+    "eta2": 0.01561484713186326,
+    "mediana_por_genero": {
+     "History": 0.3917,
+     "Science Fiction": 0.9413,
+     "War": 1.0161,
+     "Thriller": 1.1037,
+     "Crime": 1.1083,
+     "Action": 1.1156,
+     "Family": 1.2413,
+     "Fantasy": 1.2972,
+     "Mystery": 1.3197,
+     "Comedy": 1.3908,
+     "Adventure": 1.4113,
+     "Drama": 1.4279,
+     "Romance": 1.7453,
+     "Animation": 1.7571,
+     "Western": 1.9391,
+     "Horror": 2.0431,
+     "Music": 2.3961
+    }
+   },
+   {
+    "id": 4,
+    "nombre": "Popularidad del reparto",
+    "afirmacion": "Un reparto más popular se asocia con más ROI.",
+    "esperado": "Pearson > 0,30",
+    "metrica": "Pearson entre log10(popularidad del reparto + 1) y ROI",
+    "valor": -0.13653371801838468,
+    "umbral": 0.3,
+    "se_sostiene": false,
+    "pearson": -0.13653371801838468,
+    "spearman": -0.07593669362512398
+   },
+   {
+    "id": 5,
+    "nombre": "Fecha de estreno",
+    "afirmacion": "El mes o el día del estreno cambian mucho el ROI.",
+    "esperado": "η² > 0,10",
+    "metrica": "η² del ROI por mes de estreno",
+    "valor": 0.002704671842702068,
+    "umbral": 0.1,
+    "se_sostiene": false,
+    "eta2_mes": 0.002704671842702068,
+    "eta2_dia": 0.0024562653638938205
+   }
+  ]
+ },
+ "hallazgo_presupuesto": {
+  "por_escala": [
+   {
+    "escala": "Menos de 1 M",
+    "peliculas": 148,
+    "multiplo_mediano": 18.042812124999998,
+    "p25": 2.5988966892869256,
+    "p75": 83.5,
+    "pierde": 0.12162162162162163
+   },
+   {
+    "escala": "1 a 10 M",
+    "peliculas": 1453,
+    "multiplo_mediano": 4.643223333333333,
+    "p25": 2.045681375,
+    "p75": 9.529067333333334,
+    "pierde": 0.1486579490708878
+   },
+   {
+    "escala": "10 a 100 M",
+    "peliculas": 4223,
+    "multiplo_mediano": 1.9889299,
+    "p25": 0.98,
+    "p75": 3.587092366666667,
+    "pierde": 0.2547951693109164
+   },
+   {
+    "escala": "Más de 100 M",
+    "peliculas": 567,
+    "multiplo_mediano": 2.5960247045454548,
+    "p25": 1.4452755806666666,
+    "p75": 4.010354891538461,
+    "pierde": 0.12522045855379188
+   }
+  ],
+  "spearman_logbudget_y": -0.2589624984953911
+ }
+}
