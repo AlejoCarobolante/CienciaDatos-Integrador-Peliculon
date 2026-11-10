@@ -1,10 +1,10 @@
 {
- "generado": "2026-11-08",
+ "generado": "2026-11-10",
  "datos": {
-  "csv": "include/output/movies_2026-10-24.csv",
+  "csv": "include/frozen/ultimo_ok.csv",
   "fecha": "2026-10-24",
   "filas": 9940,
-  "columnas": 18,
+  "columnas": 27,
   "columnas_fuga": [
    "revenue",
    "vote_average",
@@ -12,7 +12,7 @@
   ]
  },
  "entorno": {
-  "python": "3.12.16",
+  "python": "3.13.16",
   "scikit_learn": "1.9.1",
   "pandas": "3.1.1",
   "seed": 42
@@ -117,78 +117,116 @@
    "mae_test": 0.49303598171967744,
    "r2_test": -0.046986890553544436,
    "es_final": false,
-   "mejora_vs_ridge": -0.023064054368411913,
-   "desvio_mejora_vs_ridge": 0.03694723747762682,
-   "folds_gana_vs_ridge": "2 de 5",
-   "supera_ruido_vs_ridge": false
+   "mejora_vs_ridge": -0.031188580562017464,
+   "desvio_mejora_vs_ridge": 0.03067464807406932,
+   "folds_gana_vs_ridge": "0 de 5",
+   "supera_ruido_vs_ridge": false,
+   "mejora_vs_rf": -0.0485335932666916,
+   "desvio_mejora_vs_rf": 0.03703322962563134,
+   "folds_gana_vs_rf": "0 de 5",
+   "supera_ruido_vs_rf": false
   },
   {
    "modelo": "Ridge",
-   "mae_cv": 0.4031347664721814,
-   "desvio_cv": 0.020937540159743844,
-   "factor_cv": 2.530082987908877,
-   "mae_kfold_azar": 0.3826116795706014,
-   "mae_test": 0.455966647414651,
-   "r2_test": 0.1385289897176939,
+   "mae_cv": 0.3950102402785759,
+   "desvio_cv": 0.01590830593188441,
+   "factor_cv": 2.4831916560614347,
+   "mae_kfold_azar": 0.37255307162946966,
+   "mae_test": 0.4342928696742286,
+   "r2_test": 0.20489950322436268,
    "es_final": false,
-   "mejora_vs_piso": 0.023064054368411913,
-   "desvio_mejora_vs_piso": 0.03694723747762682,
-   "folds_gana_vs_piso": "3 de 5",
-   "supera_ruido_vs_piso": false
+   "mejora_vs_piso": 0.031188580562017464,
+   "desvio_mejora_vs_piso": 0.03067464807406932,
+   "folds_gana_vs_piso": "5 de 5",
+   "supera_ruido_vs_piso": true,
+   "mejora_vs_rf": -0.017345012704674135,
+   "desvio_mejora_vs_rf": 0.008486042468843939,
+   "folds_gana_vs_rf": "0 de 5",
+   "supera_ruido_vs_rf": false
   },
   {
    "modelo": "Random Forest",
-   "mae_cv": 0.3852697028843531,
-   "desvio_cv": 0.022936578651557335,
-   "factor_cv": 2.428117521556197,
-   "mae_kfold_azar": 0.37180863404697057,
-   "mae_test": 0.45386423123078057,
-   "r2_test": 0.12136598246582653,
+   "mae_cv": 0.37839211081993684,
+   "desvio_cv": 0.02284401408913385,
+   "factor_cv": 2.389968136104122,
+   "mae_kfold_azar": 0.36320562954268915,
+   "mae_test": 0.44019957640040375,
+   "r2_test": 0.15783711072188,
    "es_final": false,
-   "mejora_vs_piso": 0.040929117956240234,
-   "desvio_mejora_vs_piso": 0.037294309128184704,
+   "mejora_vs_piso": 0.04780671002065651,
+   "desvio_mejora_vs_piso": 0.03564306884321919,
    "folds_gana_vs_piso": "5 de 5",
    "supera_ruido_vs_piso": true,
-   "mejora_vs_ridge": 0.01786506358782832,
-   "desvio_mejora_vs_ridge": 0.0025329543946880527,
+   "mejora_vs_ridge": 0.016618129458639042,
+   "desvio_mejora_vs_ridge": 0.007800324901326772,
    "folds_gana_vs_ridge": "5 de 5",
-   "supera_ruido_vs_ridge": true
+   "supera_ruido_vs_ridge": true,
+   "mejora_vs_rf": -0.0007268832460350927,
+   "desvio_mejora_vs_rf": 0.0018860578922442633,
+   "folds_gana_vs_rf": "1 de 5",
+   "supera_ruido_vs_rf": false
   },
   {
    "modelo": "HistGB (absolute_error)",
-   "mae_cv": 0.37847254646466244,
-   "desvio_cv": 0.021327693016629682,
-   "factor_cv": 2.3904108228967513,
-   "mae_kfold_azar": 0.3638461491830889,
-   "mae_test": 0.45529625674025814,
-   "r2_test": 0.07361115450550049,
+   "mae_cv": 0.37088775445951233,
+   "desvio_cv": 0.018895105877498878,
+   "factor_cv": 2.3490256251828288,
+   "mae_kfold_azar": 0.3549710908885066,
+   "mae_test": 0.43435950556782765,
+   "r2_test": 0.13063916330741443,
    "es_final": false,
-   "mejora_vs_piso": 0.047726274375930924,
-   "desvio_mejora_vs_piso": 0.03201836850183927,
+   "mejora_vs_piso": 0.05531106638108098,
+   "desvio_mejora_vs_piso": 0.02997777655811785,
    "folds_gana_vs_piso": "5 de 5",
    "supera_ruido_vs_piso": true,
-   "mejora_vs_ridge": 0.02466222000751901,
-   "desvio_mejora_vs_ridge": 0.007214865214294208,
+   "mejora_vs_ridge": 0.02412248581906351,
+   "desvio_mejora_vs_ridge": 0.006665705798935118,
+   "folds_gana_vs_ridge": "5 de 5",
+   "supera_ruido_vs_ridge": true,
+   "mejora_vs_rf": 0.0067774731143893764,
+   "desvio_mejora_vs_rf": 0.01050669899846943,
+   "folds_gana_vs_rf": "3 de 5",
+   "supera_ruido_vs_rf": false
+  },
+  {
+   "modelo": "Random Forest ajustado",
+   "mae_cv": 0.37766522757390175,
+   "desvio_cv": 0.022769480644928602,
+   "factor_cv": 2.3859713669266616,
+   "mae_kfold_azar": null,
+   "mae_test": 0.4401858876484238,
+   "r2_test": 0.15439626075918034,
+   "es_final": false,
+   "mejora_vs_piso": 0.0485335932666916,
+   "desvio_mejora_vs_piso": 0.03703322962563134,
+   "folds_gana_vs_piso": "5 de 5",
+   "supera_ruido_vs_piso": true,
+   "mejora_vs_ridge": 0.017345012704674135,
+   "desvio_mejora_vs_ridge": 0.008486042468843939,
    "folds_gana_vs_ridge": "5 de 5",
    "supera_ruido_vs_ridge": true
   },
   {
-   "modelo": "Random Forest ajustado",
-   "mae_cv": 0.3841863923448918,
-   "desvio_cv": 0.023096359033207357,
-   "factor_cv": 2.422068337242618,
+   "modelo": "Promedio de 3 modelos",
+   "mae_cv": 0.37189612621240237,
+   "desvio_cv": 0.019211598906878825,
+   "factor_cv": 2.3544860747216165,
    "mae_kfold_azar": null,
-   "mae_test": 0.45688316074788377,
-   "r2_test": 0.11329983475267669,
+   "mae_test": 0.4266805278668168,
+   "r2_test": 0.18604966517534816,
    "es_final": true,
-   "mejora_vs_piso": 0.04201242849570146,
-   "desvio_mejora_vs_piso": 0.03811317994918337,
+   "mejora_vs_piso": 0.054302694628191,
+   "desvio_mejora_vs_piso": 0.03235282435271531,
    "folds_gana_vs_piso": "5 de 5",
    "supera_ruido_vs_piso": true,
-   "mejora_vs_ridge": 0.018948374127289547,
-   "desvio_mejora_vs_ridge": 0.0022602205467662615,
+   "mejora_vs_ridge": 0.02311411406617353,
+   "desvio_mejora_vs_ridge": 0.004026138536940328,
    "folds_gana_vs_ridge": "5 de 5",
-   "supera_ruido_vs_ridge": true
+   "supera_ruido_vs_ridge": true,
+   "mejora_vs_rf": 0.005769101361499396,
+   "desvio_mejora_vs_rf": 0.005865799374505102,
+   "folds_gana_vs_rf": "3 de 5",
+   "supera_ruido_vs_rf": false
   }
  ],
  "folds": [
@@ -220,111 +258,205 @@
   {
    "modelo": "Ridge",
    "fold": 1,
-   "mae": 0.4005480499795194
+   "mae": 0.4021547305162424
   },
   {
    "modelo": "Ridge",
    "fold": 2,
-   "mae": 0.381342531112896
+   "mae": 0.37700476485006146
   },
   {
    "modelo": "Ridge",
    "fold": 3,
-   "mae": 0.3795526147445839
+   "mae": 0.3750577536105276
   },
   {
    "modelo": "Ridge",
    "fold": 4,
-   "mae": 0.4285398720779231
+   "mae": 0.4133574994362149
   },
   {
    "modelo": "Ridge",
    "fold": 5,
-   "mae": 0.42569076444598464
+   "mae": 0.4074764529798329
   },
   {
    "modelo": "Random Forest",
    "fold": 1,
-   "mae": 0.38379250294596157
+   "mae": 0.38075687476301795
   },
   {
    "modelo": "Random Forest",
    "fold": 2,
-   "mae": 0.36133058281260017
+   "mae": 0.3514649159992295
   },
   {
    "modelo": "Random Forest",
    "fold": 3,
-   "mae": 0.3587304369212126
+   "mae": 0.3534155842500399
   },
   {
    "modelo": "Random Forest",
    "fold": 4,
-   "mae": 0.4104906877871394
+   "mae": 0.40688300977751946
   },
   {
    "modelo": "Random Forest",
    "fold": 5,
-   "mae": 0.41200430395485177
+   "mae": 0.3994401693098773
   },
   {
    "modelo": "HistGB (absolute_error)",
    "fold": 1,
-   "mae": 0.38727258668074216
+   "mae": 0.3808407552884897
   },
   {
    "modelo": "HistGB (absolute_error)",
    "fold": 2,
-   "mae": 0.3517397967112807
+   "mae": 0.35162832035057673
   },
   {
    "modelo": "HistGB (absolute_error)",
    "fold": 3,
-   "mae": 0.3555343844315372
+   "mae": 0.3489547012316698
   },
   {
    "modelo": "HistGB (absolute_error)",
    "fold": 4,
-   "mae": 0.4066828932125603
+   "mae": 0.39966282971949485
   },
   {
    "modelo": "HistGB (absolute_error)",
    "fold": 5,
-   "mae": 0.3911330712871917
+   "mae": 0.3733521657073307
   },
   {
    "modelo": "Random Forest ajustado",
    "fold": 1,
-   "mae": 0.38107216306382063
+   "mae": 0.3775354423663506
   },
   {
    "modelo": "Random Forest ajustado",
    "fold": 2,
-   "mae": 0.359582866547363
+   "mae": 0.34927012385381223
   },
   {
    "modelo": "Random Forest ajustado",
    "fold": 3,
-   "mae": 0.3588308717153331
+   "mae": 0.35567521662349383
   },
   {
    "modelo": "Random Forest ajustado",
    "fold": 4,
-   "mae": 0.4113895036328914
+   "mae": 0.40656337444349155
   },
   {
    "modelo": "Random Forest ajustado",
    "fold": 5,
-   "mae": 0.4100565567650512
+   "mae": 0.3992819805823604
+  },
+  {
+   "modelo": "Promedio de 3 modelos",
+   "fold": 1,
+   "mae": 0.3775555146808785
+  },
+  {
+   "modelo": "Promedio de 3 modelos",
+   "fold": 2,
+   "mae": 0.3503893438214622
+  },
+  {
+   "modelo": "Promedio de 3 modelos",
+   "fold": 3,
+   "mae": 0.34917452218212713
+  },
+  {
+   "modelo": "Promedio de 3 modelos",
+   "fold": 4,
+   "mae": 0.39791865920834124
+  },
+  {
+   "modelo": "Promedio de 3 modelos",
+   "fold": 5,
+   "mae": 0.3844425911692026
   }
  ],
  "histgb_vs_final": {
   "comparación": "HistGB (absolute_error) vs Random Forest ajustado",
-  "mejora media": 0.005713845880229463,
-  "desvío de la mejora": 0.00809735927892079,
-  "folds que gana": "4 de 5",
+  "mejora media": 0.0067774731143893764,
+  "desvío de la mejora": 0.01050669899846943,
+  "folds que gana": "3 de 5",
   "supera el ruido": 0.0
  },
+ "final_vs_rf": {
+  "comparación": "Promedio de 3 modelos vs Random Forest ajustado",
+  "mejora media": 0.005769101361499396,
+  "desvío de la mejora": 0.005865799374505102,
+  "folds que gana": "3 de 5",
+  "supera el ruido": 0.0
+ },
+ "pruebas_correccion": [
+  {
+   "prueba": "Random Forest ajustado (referencia)",
+   "mae_cv": 0.37766522757390175,
+   "r2_cv": 0.09694192389130267,
+   "mejora": 0.0,
+   "desvio_mejora": 0.0,
+   "cortes_gana": "—",
+   "supera_ruido": false,
+   "que_es": "El modelo de la Entrega 3, con las columnas nuevas."
+  },
+  {
+   "prueba": "Promedio de 3 modelos (el final)",
+   "mae_cv": 0.37189612621240237,
+   "r2_cv": 0.10919109685486425,
+   "mejora": 0.005769101361499396,
+   "desvio_mejora": 0.005865799374505114,
+   "cortes_gana": "3 de 5",
+   "supera_ruido": false,
+   "que_es": "Promedia Random Forest, HistGB y Ridge."
+  },
+  {
+   "prueba": "Pérdida Huber (GradientBoosting)",
+   "mae_cv": 0.37212457177906544,
+   "r2_cv": 0.09166835677059573,
+   "mejora": 0.005540655794836336,
+   "desvio_mejora": 0.00901799202873102,
+   "cortes_gana": "3 de 5",
+   "supera_ruido": false,
+   "que_es": "Penaliza distinto los errores grandes, para no quedarse en la mediana."
+  },
+  {
+   "prueba": "Estirar las predicciones ×1,5",
+   "mae_cv": 0.4067589822778178,
+   "r2_cv": 0.010097451570050774,
+   "mejora": -0.029093754703916008,
+   "desvio_mejora": 0.01147768839264472,
+   "cortes_gana": "0 de 5",
+   "supera_ruido": false,
+   "que_es": "Aleja cada predicción de la mediana un 50%."
+  },
+  {
+   "prueba": "Más peso a los casos extremos",
+   "mae_cv": 0.3962106673893377,
+   "r2_cv": 0.0682436079795192,
+   "mejora": -0.01854543981543596,
+   "desvio_mejora": 0.008581785009796684,
+   "cortes_gana": "0 de 5",
+   "supera_ruido": false,
+   "que_es": "Al entrenar, cada película pesa 1 + su distancia a la mediana."
+  },
+  {
+   "prueba": "+ «pertenece a una saga» (trampa)",
+   "mae_cv": 0.36212300228539707,
+   "r2_cv": 0.14990392715950546,
+   "mejora": 0.015542225288504652,
+   "desvio_mejora": 0.006466010277104941,
+   "cortes_gana": "5 de 5",
+   "supera_ruido": true,
+   "que_es": "TMDb crea la saga cuando hay secuela, y eso pasa si a la primera le fue bien: se sabe después."
+  }
+ ],
  "grilla": {
   "mejores": {
    "max_features": 0.3,
@@ -334,157 +466,162 @@
    {
     "min_samples_leaf": 10,
     "max_features": 0.3,
-    "mae": 0.3841863923448918,
-    "desvio": 0.023096359033207357
-   },
-   {
-    "min_samples_leaf": 20,
-    "max_features": 0.3,
-    "mae": 0.38478218916294943,
-    "desvio": 0.0240460538053224
-   },
-   {
-    "min_samples_leaf": 40,
-    "max_features": 0.3,
-    "mae": 0.3850597629586907,
-    "desvio": 0.02397659642028897
+    "mae": 0.37766522757390175,
+    "desvio": 0.022769480644928602
    },
    {
     "min_samples_leaf": 5,
     "max_features": 0.3,
-    "mae": 0.3852697028843531,
-    "desvio": 0.022936578651557335
+    "mae": 0.37839211081993684,
+    "desvio": 0.02284401408913385
    },
    {
-    "min_samples_leaf": 40,
-    "max_features": 0.6,
-    "mae": 0.3857152415723083,
-    "desvio": 0.023067665424884466
+    "min_samples_leaf": 1,
+    "max_features": 0.3,
+    "mae": 0.37894523811828973,
+    "desvio": 0.023445733030675618
    },
    {
     "min_samples_leaf": 20,
-    "max_features": 0.6,
-    "mae": 0.38593685119337434,
-    "desvio": 0.02242316827854285
-   },
-   {
-    "min_samples_leaf": 40,
-    "max_features": 1.0,
-    "mae": 0.3866154621214339,
-    "desvio": 0.022539533866009643
+    "max_features": 0.3,
+    "mae": 0.37910238855925504,
+    "desvio": 0.022570821848098943
    },
    {
     "min_samples_leaf": 10,
     "max_features": 0.6,
-    "mae": 0.38674343204557393,
-    "desvio": 0.023016520719345065
+    "mae": 0.37987920684736676,
+    "desvio": 0.02295175075708697
+   },
+   {
+    "min_samples_leaf": 20,
+    "max_features": 0.6,
+    "mae": 0.3804394006977315,
+    "desvio": 0.02164521253874552
    },
    {
     "min_samples_leaf": 5,
     "max_features": 0.6,
-    "mae": 0.3870777654808648,
-    "desvio": 0.023088539274955883
+    "mae": 0.380514088395844,
+    "desvio": 0.022035544975280194
    },
    {
-    "min_samples_leaf": 1,
+    "min_samples_leaf": 40,
     "max_features": 0.3,
-    "mae": 0.387676662812086,
-    "desvio": 0.02520246640354542
+    "mae": 0.38064499923777373,
+    "desvio": 0.022021677610675125
+   },
+   {
+    "min_samples_leaf": 40,
+    "max_features": 0.6,
+    "mae": 0.3806990273710172,
+    "desvio": 0.02158681174185238
+   },
+   {
+    "min_samples_leaf": 40,
+    "max_features": 1.0,
+    "mae": 0.38146438002363636,
+    "desvio": 0.020416231385956152
    },
    {
     "min_samples_leaf": 20,
     "max_features": 1.0,
-    "mae": 0.38773188795256297,
-    "desvio": 0.02210802501071063
+    "mae": 0.3825137065490647,
+    "desvio": 0.02114484074601005
    },
    {
     "min_samples_leaf": 10,
     "max_features": 1.0,
-    "mae": 0.38852995716165434,
-    "desvio": 0.02298665355209637
+    "mae": 0.38293893817972197,
+    "desvio": 0.02217984414483645
    },
    {
     "min_samples_leaf": 5,
     "max_features": 1.0,
-    "mae": 0.389883271457753,
-    "desvio": 0.02310599104344633
+    "mae": 0.38319576826342916,
+    "desvio": 0.022339658328765093
    },
    {
     "min_samples_leaf": 1,
     "max_features": 0.6,
-    "mae": 0.3906150811505809,
-    "desvio": 0.025185641997830095
+    "mae": 0.3852227347997309,
+    "desvio": 0.023362223868390517
    },
    {
     "min_samples_leaf": 1,
     "max_features": 1.0,
-    "mae": 0.39264254710230795,
-    "desvio": 0.025665134660487074
+    "mae": 0.3858184120361341,
+    "desvio": 0.022745145602779064
    }
   ]
  },
  "final": {
-  "nombre": "Random Forest ajustado",
+  "nombre": "Promedio de 3 modelos",
   "params": {
    "n_estimators": 300,
    "random_state": 42,
    "min_samples_leaf": 10,
    "max_features": 0.3
   },
-  "mae_cv": 0.3841863923448918,
-  "desvio_cv": 0.023096359033207357,
+  "componentes": [
+   "Random Forest ajustado",
+   "HistGB (absolute_error)",
+   "Ridge"
+  ],
+  "mae_cv": 0.37189612621240237,
+  "desvio_cv": 0.019211598906878825,
   "mae_piso_cv": 0.4261988208405933,
-  "mae_test": 0.45688316074788377,
-  "factor_test": 2.8634075171048723,
-  "rmse_test": 0.6579100373931317,
-  "r2_test": 0.11329983475267669,
+  "mae_test": 0.4266805278668168,
+  "factor_test": 2.671040836721382,
+  "rmse_test": 0.6303431978326813,
+  "r2_test": 0.18604966517534816,
   "mae_piso_test": 0.49303598171967744,
   "factor_piso_test": 3.111974156507258,
   "r2_piso_test": -0.046986890553544436,
-  "mejora_test_pct": 0.07332694227649468,
-  "mejora_cv_pct": 0.09857471781090389,
+  "mejora_test_pct": 0.13458541833279006,
+  "mejora_cv_pct": 0.12741164914790132,
   "mediana_piso_y": 0.3929304940725355
  },
  "por_tramo": [
   {
    "tramo": "Pérdida (ROI<0)",
    "peliculas": 347,
-   "mae": 0.8687143637877743,
+   "mae": 0.8349232245984999,
    "roi_real_mediano": -0.57739466,
-   "roi_pred_mediano": 0.7985595011692326,
-   "sesgo": 0.8687143637877743
+   "roi_pred_mediano": 0.6455777590547795,
+   "sesgo": 0.8348168704216843
   },
   {
    "tramo": "Recupera hasta 2x",
    "peliculas": 252,
-   "mae": 0.18458002828180642,
+   "mae": 0.18628261078512648,
    "roi_real_mediano": 0.4114485662162162,
-   "roi_pred_mediano": 0.9618302645238398,
-   "sesgo": 0.1559733219453882
+   "roi_pred_mediano": 0.9004319533755695,
+   "sesgo": 0.13708443387423297
   },
   {
    "tramo": "2x a 4x",
    "peliculas": 306,
-   "mae": 0.15691430683531588,
+   "mae": 0.15517270061028587,
    "roi_real_mediano": 1.7895734796296296,
-   "roi_pred_mediano": 1.14519496011935,
-   "sesgo": -0.12146830085192269
+   "roi_pred_mediano": 1.2031150212424653,
+   "sesgo": -0.10095791947455654
   },
   {
    "tramo": "4x a 11x",
    "peliculas": 282,
-   "mae": 0.41173354990502065,
+   "mae": 0.34458615902007533,
    "roi_real_mediano": 4.759183450429353,
-   "roi_pred_mediano": 1.270269091123742,
-   "sesgo": -0.407274160579733
+   "roi_pred_mediano": 1.658134912060447,
+   "sesgo": -0.3372283541424228
   },
   {
    "tramo": "Más de 11x",
    "peliculas": 91,
-   "mae": 0.7891647154901111,
+   "mae": 0.7030768629654051,
    "roi_real_mediano": 16.30134188888889,
-   "roi_pred_mediano": 2.0561149416906037,
-   "sesgo": -0.7800600940487505
+   "roi_pred_mediano": 2.7061012515743106,
+   "sesgo": -0.6978543215063139
   }
  ],
  "fracasos_no_anticipados": [
@@ -494,7 +631,7 @@
    "budget": 14000000.0,
    "revenue": 10303.0,
    "roi": -0.9992640714285714,
-   "roi_pred": 1.4170837114210588
+   "roi_pred": 1.2406490585009617
   },
   {
    "title": "Red Notice",
@@ -502,7 +639,7 @@
    "budget": 160000000.0,
    "revenue": 178143.0,
    "roi": -0.99888660625,
-   "roi_pred": 1.1602506124536984
+   "roi_pred": 0.5064773088230909
   },
   {
    "title": "The Gray Man",
@@ -510,15 +647,7 @@
    "budget": 200000000.0,
    "revenue": 454023.0,
    "roi": -0.997729885,
-   "roi_pred": 1.7785462543769999
-  },
-  {
-   "title": "The Killer",
-   "release_year": 2023,
-   "budget": 175000000.0,
-   "revenue": 362113.0,
-   "roi": -0.9979307828571429,
-   "roi_pred": 1.4313426958461695
+   "roi_pred": 1.5599465972719622
   },
   {
    "title": "Occupation",
@@ -526,7 +655,15 @@
    "budget": 6000000.0,
    "revenue": 21704.0,
    "roi": -0.9963826666666666,
-   "roi_pred": 1.6682163567250603
+   "roi_pred": 1.968457282913156
+  },
+  {
+   "title": "The Killer",
+   "release_year": 2023,
+   "budget": 175000000.0,
+   "revenue": 362113.0,
+   "roi": -0.9979307828571429,
+   "roi_pred": 0.5327561435723203
   }
  ],
  "exitos_no_anticipados": [
@@ -536,31 +673,7 @@
    "budget": 286284.0,
    "revenue": 137416709.0,
    "roi": 479.0013587905716,
-   "roi_pred": 7.489147494190567
-  },
-  {
-   "title": "Lost in the Stars",
-   "release_year": 2023,
-   "budget": 9500000.0,
-   "revenue": 334039200.0,
-   "roi": 34.16202105263158,
-   "roi_pred": -0.017958094955643933
-  },
-  {
-   "title": "Ne Zha 2",
-   "release_year": 2025,
-   "budget": 80000000.0,
-   "revenue": 2270700370.0,
-   "roi": 27.383754625,
-   "roi_pred": 0.3567664079445687
-  },
-  {
-   "title": "Get Out",
-   "release_year": 2017,
-   "budget": 4500000.0,
-   "revenue": 255407969.0,
-   "roi": 55.757326444444445,
-   "roi_pred": 2.0561149416906037
+   "roi_pred": 11.381379793051996
   },
   {
    "title": "One Cut of the Dead",
@@ -568,109 +681,218 @@
    "budget": 52406.0,
    "revenue": 27590180.0,
    "roi": 525.4698698622295,
-   "roi_pred": 28.76170625480234
+   "roi_pred": 25.830014844415658
+  },
+  {
+   "title": "Lost in the Stars",
+   "release_year": 2023,
+   "budget": 9500000.0,
+   "revenue": 334039200.0,
+   "roi": 34.16202105263158,
+   "roi_pred": 1.272440605901592
+  },
+  {
+   "title": "Get Out",
+   "release_year": 2017,
+   "budget": 4500000.0,
+   "revenue": 255407969.0,
+   "roi": 55.757326444444445,
+   "roi_pred": 2.6953748959938406
+  },
+  {
+   "title": "Happy Death Day",
+   "release_year": 2017,
+   "budget": 4800000.0,
+   "revenue": 125479266.0,
+   "roi": 25.14151375,
+   "roi_pred": 0.8689670860250833
   }
  ],
  "importancia": [
   {
    "variable": "budget",
-   "aumento_mae": 0.021005782348373622,
-   "desvio": 0.0025649921714156814
-  },
-  {
-   "variable": "budget_vs_genre_median",
-   "aumento_mae": 0.009096779221661569,
-   "desvio": 0.0014060918898294152
-  },
-  {
-   "variable": "prod_hist_roi",
-   "aumento_mae": 0.007833809142174283,
-   "desvio": 0.0011448014648129164
-  },
-  {
-   "variable": "runtime",
-   "aumento_mae": 0.005277965615340783,
-   "desvio": 0.0019565698282670704
-  },
-  {
-   "variable": "primary_production_company",
-   "aumento_mae": 0.004996515784603206,
-   "desvio": 0.0008992100142421409
-  },
-  {
-   "variable": "original_language",
-   "aumento_mae": 0.0021359782289427894,
-   "desvio": 0.0003157502382394886
-  },
-  {
-   "variable": "director_leverage",
-   "aumento_mae": 0.0015734926838270546,
-   "desvio": 0.0010138735653225017
-  },
-  {
-   "variable": "primary_genre",
-   "aumento_mae": 0.0015057098847781891,
-   "desvio": 0.00035929943736589864
-  },
-  {
-   "variable": "director_vs_cast",
-   "aumento_mae": 0.0011083618820014796,
-   "desvio": 0.0006321396597171895
-  },
-  {
-   "variable": "lead_actor_popularity",
-   "aumento_mae": 0.0010640003202069953,
-   "desvio": 0.00042219767245688637
-  },
-  {
-   "variable": "director_popularity",
-   "aumento_mae": 0.0009749874057483315,
-   "desvio": 0.0006578888073503651
-  },
-  {
-   "variable": "secondary_genre",
-   "aumento_mae": 0.0009330386360489551,
-   "desvio": 0.0002809761371988909
-  },
-  {
-   "variable": "release_month",
-   "aumento_mae": 0.0008896036350172137,
-   "desvio": 0.0004014030155473536
-  },
-  {
-   "variable": "release_day_of_week",
-   "aumento_mae": 0.0007778552199199761,
-   "desvio": 0.0006178563441549407
+   "aumento_mae": 0.05757004603573677,
+   "desvio": 0.005190580463441879
   },
   {
    "variable": "power_pack",
-   "aumento_mae": 0.0007562255126711631,
-   "desvio": 0.0003638319801666635
+   "aumento_mae": 0.018105324245325707,
+   "desvio": 0.0030005783038901126
   },
   {
-   "variable": "co_production_company",
-   "aumento_mae": 0.000717735156503907,
-   "desvio": 0.00019517356278503606
+   "variable": "saga_hist",
+   "aumento_mae": 0.01511845233178121,
+   "desvio": 0.0011193660578977527
   },
   {
-   "variable": "co_star_popularity",
-   "aumento_mae": 0.00026117285298913326,
-   "desvio": 0.0006739649664034248
+   "variable": "original_language",
+   "aumento_mae": 0.007230565660416655,
+   "desvio": 0.0007778698477558109
   },
   {
-   "variable": "is_horror_low_budget",
-   "aumento_mae": 4.954975988627486e-06,
-   "desvio": 7.087412468033816e-05
+   "variable": "runtime",
+   "aumento_mae": 0.006511531826533376,
+   "desvio": 0.0015732944494546222
   },
   {
-   "variable": "release_year",
-   "aumento_mae": 0.0,
-   "desvio": 0.0
+   "variable": "actor_hist",
+   "aumento_mae": 0.006305834222051945,
+   "desvio": 0.0012165942519944978
+  },
+  {
+   "variable": "paises_n",
+   "aumento_mae": 0.006284934068626957,
+   "desvio": 0.0009509018776845783
+  },
+  {
+   "variable": "primary_genre",
+   "aumento_mae": 0.004428525724550722,
+   "desvio": 0.0009273135924589852
+  },
+  {
+   "variable": "prod_hist_roi",
+   "aumento_mae": 0.00357372170827861,
+   "desvio": 0.0005095926937846087
+  },
+  {
+   "variable": "kw_secuela",
+   "aumento_mae": 0.003573080678997695,
+   "desvio": 0.0006149505394288838
+  },
+  {
+   "variable": "secondary_genre",
+   "aumento_mae": 0.0034377156761819403,
+   "desvio": 0.0005426952444331602
   },
   {
    "variable": "star_power_ratio",
-   "aumento_mae": -9.887407139198834e-05,
-   "desvio": 0.000496575098700064
+   "aumento_mae": 0.0025088290818593485,
+   "desvio": 0.0006829879298911952
+  },
+  {
+   "variable": "director_popularity",
+   "aumento_mae": 0.002348830474220054,
+   "desvio": 0.0011892821573576298
+  },
+  {
+   "variable": "budget_vs_genre_median",
+   "aumento_mae": 0.0019860749701340803,
+   "desvio": 0.0007371387494432552
+  },
+  {
+   "variable": "primary_production_company",
+   "aumento_mae": 0.0019583290943746084,
+   "desvio": 0.0010031555872276295
+  },
+  {
+   "variable": "release_month",
+   "aumento_mae": 0.0017565615655059097,
+   "desvio": 0.0004847272155981697
+  },
+  {
+   "variable": "co_star_popularity",
+   "aumento_mae": 0.0016652220596258648,
+   "desvio": 0.0013057316074218187
+  },
+  {
+   "variable": "kw_found_footage",
+   "aumento_mae": 0.0016596034189257174,
+   "desvio": 0.0002921932210382602
+  },
+  {
+   "variable": "director_hist",
+   "aumento_mae": 0.0015712693576325515,
+   "desvio": 0.0004657926596212067
+  },
+  {
+   "variable": "release_day_of_week",
+   "aumento_mae": 0.0015540560998387408,
+   "desvio": 0.0009457331874099566
+  },
+  {
+   "variable": "director_vs_cast",
+   "aumento_mae": 0.0011091994691461466,
+   "desvio": 0.0005287885547085792
+  },
+  {
+   "variable": "lead_actor_popularity",
+   "aumento_mae": 0.0009171523064087694,
+   "desvio": 0.0004919449530405037
+  },
+  {
+   "variable": "director_leverage",
+   "aumento_mae": 0.0007929181390000678,
+   "desvio": 0.00034167790536678575
+  },
+  {
+   "variable": "director_n_prev",
+   "aumento_mae": 0.0006791845524301732,
+   "desvio": 0.0005973661052400967
+  },
+  {
+   "variable": "co_production_company",
+   "aumento_mae": 0.0005983819560821613,
+   "desvio": 0.0003340124331231716
+  },
+  {
+   "variable": "release_year",
+   "aumento_mae": 0.0004340297592361514,
+   "desvio": 9.295454236698388e-05
+  },
+  {
+   "variable": "kw_comic",
+   "aumento_mae": 0.0004162597619684433,
+   "desvio": 0.00014674151815276785
+  },
+  {
+   "variable": "es_eeuu",
+   "aumento_mae": 0.00021665634635767984,
+   "desvio": 0.0003675859784160382
+  },
+  {
+   "variable": "actor_n_prev",
+   "aumento_mae": 0.00021196898102141538,
+   "desvio": 0.0002973619237273588
+  },
+  {
+   "variable": "kw_remake",
+   "aumento_mae": 8.393221574519994e-05,
+   "desvio": 3.8563076791151525e-05
+  },
+  {
+   "variable": "is_horror_low_budget",
+   "aumento_mae": 3.6058163775049e-05,
+   "desvio": 5.159641196374529e-05
+  },
+  {
+   "variable": "kw_musical",
+   "aumento_mae": 1.5970279628219063e-05,
+   "desvio": 4.5624873823083535e-05
+  },
+  {
+   "variable": "kw_videojuego",
+   "aumento_mae": -9.46659913952097e-06,
+   "desvio": 4.779213075803006e-06
+  },
+  {
+   "variable": "kw_navidad",
+   "aumento_mae": -3.926394793024312e-05,
+   "desvio": 1.625685519582611e-05
+  },
+  {
+   "variable": "kw_libro",
+   "aumento_mae": -8.510147922855815e-05,
+   "desvio": 0.00024867955501894267
+  },
+  {
+   "variable": "kw_historia_real",
+   "aumento_mae": -0.00021211768212522631,
+   "desvio": 0.00029148579116765794
+  },
+  {
+   "variable": "es_secuela",
+   "aumento_mae": -0.0005307394799974968,
+   "desvio": 0.0002686655604355355
   }
  ],
  "popularidades": {
@@ -679,63 +901,69 @@
    "lead_actor_popularity": 0.3445,
    "co_star_popularity": 0.3332
   },
-  "mae_test_con": 0.45688316074788377,
-  "mae_test_sin": 0.45526638550856774
+  "mae_test_con": 0.4266805278668168,
+  "mae_test_sin": 0.425727835425357
  },
  "ablacion": [
   {
    "variante": "(todas las columnas)",
-   "mae": 0.3841863923448918,
-   "desvio": 0.023096359033207357,
+   "mae": 0.37766522757390175,
+   "desvio": 0.02276948064492859,
    "cambio": 0.0
   },
   {
    "variante": "sin budget",
-   "mae": 0.3876145635712674,
-   "desvio": 0.023881431769591618,
-   "cambio": 0.003428171226375565
+   "mae": 0.3798118937363421,
+   "desvio": 0.023411978690716324,
+   "cambio": 0.0021466661624403582
   },
   {
    "variante": "sin popularidades (director y elenco)",
-   "mae": 0.38343227870269414,
-   "desvio": 0.023864114972611573,
-   "cambio": -0.0007541136421976846
+   "mae": 0.3778584790592553,
+   "desvio": 0.02221149656468521,
+   "cambio": 0.00019325148535354053
   },
   {
    "variante": "sin productoras",
-   "mae": 0.3857643516363872,
-   "desvio": 0.02335751575557919,
-   "cambio": 0.001577959291495401
+   "mae": 0.37792579751812294,
+   "desvio": 0.022346676558200607,
+   "cambio": 0.0002605699442211895
   },
   {
    "variante": "sin calendario (mes y día)",
-   "mae": 0.38719968767633495,
-   "desvio": 0.02342602655535384,
-   "cambio": 0.003013295331443122
+   "mae": 0.3799377131360305,
+   "desvio": 0.022930249807555547,
+   "cambio": 0.002272485562128723
   },
   {
    "variante": "sin idioma",
-   "mae": 0.383789196269925,
-   "desvio": 0.023449668554655745,
-   "cambio": -0.0003971960749667991
+   "mae": 0.37833322204088743,
+   "desvio": 0.0227712451859228,
+   "cambio": 0.0006679944669856774
   },
   {
    "variante": "sin géneros",
-   "mae": 0.38537341918218176,
-   "desvio": 0.02370973075268655,
-   "cambio": 0.0011870268372899395
+   "mae": 0.37857238853548913,
+   "desvio": 0.022567084010046336,
+   "cambio": 0.0009071609615873832
   },
   {
    "variante": "sin runtime",
-   "mae": 0.3861653267065825,
-   "desvio": 0.0241963378184387,
-   "cambio": 0.001978934361690665
+   "mae": 0.3792328540909041,
+   "desvio": 0.02342297606155443,
+   "cambio": 0.001567626517002374
   },
   {
    "variante": "sin release_year",
-   "mae": 0.38368730840025966,
-   "desvio": 0.02294234888279134,
-   "cambio": -0.0004990839446321615
+   "mae": 0.3766284668241432,
+   "desvio": 0.023098216148422335,
+   "cambio": -0.0010367607497585585
+  },
+  {
+   "variante": "sin el contexto nuevo (director, actor, saga, palabras clave, países)",
+   "mae": 0.3841863923448918,
+   "desvio": 0.023096359033207357,
+   "cambio": 0.006521164770990073
   }
  ],
  "entrega2": {
@@ -751,10 +979,10 @@
     "afirmacion": "A mayor presupuesto, mayor recaudación.",
     "esperado": "Pearson ≥ 0,60 entre presupuesto y recaudación",
     "metrica": "Pearson entre log10(budget) y log10(revenue)",
-    "valor": 0.6108418632193882,
+    "valor": 0.6108418632193879,
     "umbral": 0.6,
     "se_sostiene": true,
-    "pearson_logbudget_logrevenue": 0.6108418632193882,
+    "pearson_logbudget_logrevenue": 0.6108418632193879,
     "pearson_logbudget_roi": -0.34194855801008456,
     "spearman_logbudget_roi": -0.2280617893410038
    },
@@ -811,10 +1039,10 @@
     "afirmacion": "Un reparto más popular se asocia con más ROI.",
     "esperado": "Pearson > 0,30",
     "metrica": "Pearson entre log10(popularidad del reparto + 1) y ROI",
-    "valor": -0.13653371801838468,
+    "valor": -0.13653371801838474,
     "umbral": 0.3,
     "se_sostiene": false,
-    "pearson": -0.13653371801838468,
+    "pearson": -0.13653371801838474,
     "spearman": -0.07593669362512398
    },
    {
@@ -838,7 +1066,7 @@
     "peliculas": 148,
     "multiplo_mediano": 18.042812124999998,
     "p25": 2.5988966892869256,
-    "p75": 83.5,
+    "p75": 83.49999999999999,
     "pierde": 0.12162162162162163
    },
    {
@@ -854,7 +1082,7 @@
     "peliculas": 4223,
     "multiplo_mediano": 1.9889299,
     "p25": 0.98,
-    "p75": 3.587092366666667,
+    "p75": 3.5870923666666665,
     "pierde": 0.2547951693109164
    },
    {

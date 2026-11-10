@@ -5,7 +5,8 @@
 1. Lee el CSV más reciente de include/output/movies_*.csv (o include/frozen/ultimo_ok.csv).
 2. Aplica los filtros, las features, la partición temporal, el pipeline y la semilla de
    presentacion3.ipynb. El código es el mismo: los dos importan include/modelo/.
-3. Entrena el Random Forest ajustado con el 80% de entrenamiento (como el notebook, no con todo).
+3. Entrena el modelo final (promedio de Random Forest ajustado, HistGB y Ridge) con el 80% de
+   entrenamiento (como el notebook, no con todo).
 4. Guarda en app/artefactos/:
    - modelo.joblib        el pipeline entrenado
    - referencias.joblib   medianas por género e historia por productora (features de un caso nuevo)
@@ -59,12 +60,12 @@ def fecha_de(csv: Path) -> str:
 
 
 def mae_test_del_notebook() -> float | None:
-    """Lee de las salidas guardadas del notebook la línea «RF ajustado: MAE = ...» del test."""
+    """Lee de las salidas guardadas del notebook la línea «Modelo final: MAE = ...» del test."""
     nb = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
     for celda in nb["cells"]:
         for salida in celda.get("outputs", []):
             texto = "".join(salida.get("text", ""))
-            m = re.search(r"RF ajustado:\s+MAE = ([0-9.]+)", texto)
+            m = re.search(r"Modelo final:\s+MAE = ([0-9.]+)", texto)
             if m:
                 return float(m.group(1))
     return None
@@ -110,7 +111,10 @@ def main() -> None:
     log("Grilla de Random Forest...")
     grilla = E.grilla_rf(tss).fit(X_train, y_train)
     mejor = grilla.best_index_
-    folds[E.NOMBRE_FINAL] = [-grilla.cv_results_[f"split{i}_test_score"][mejor] for i in range(E.N_FOLDS)]
+    folds[E.NOMBRE_RF] = [-grilla.cv_results_[f"split{i}_test_score"][mejor] for i in range(E.N_FOLDS)]
+    log("Modelo final (promedio de 3) en los mismos cortes...")
+    folds[E.NOMBRE_FINAL] = -cross_validate(E.modelo_final(grilla.best_params_), X_train, y_train, cv=tss,
+                                            scoring="neg_mean_absolute_error")["test_score"]
     tabla_grilla = (pd.DataFrame(grilla.cv_results_)[["param_modelo__min_samples_leaf", "param_modelo__max_features",
                                                       "mean_test_score", "std_test_score"]]
                     .rename(columns={"param_modelo__min_samples_leaf": "min_samples_leaf",
@@ -123,14 +127,15 @@ def main() -> None:
 
     # 3. Modelo final y test (una sola medición, igual que el notebook) -------------------------
     log("Entrenando el modelo final con el 80% de entrenamiento...")
-    modelo_final = E.rf_ajustado(grilla.best_params_).fit(X_train, y_train)
+    modelo_final = E.modelo_final(grilla.best_params_).fit(X_train, y_train)
     piso = DummyRegressor(strategy="median").fit(X_train, y_train)
     pred_test, piso_test = modelo_final.predict(X_test), piso.predict(X_test)
     mae_final, mae_piso = mean_absolute_error(y_test, pred_test), mean_absolute_error(y_test, piso_test)
 
     # Test de todos los candidatos: informativo (la elección se hizo con validación cruzada)
     test_todos = {}
-    for nombre, m in {**candidatos, E.NOMBRE_FINAL: E.rf_ajustado(grilla.best_params_)}.items():
+    for nombre, m in {**candidatos, E.NOMBRE_RF: E.rf_ajustado(grilla.best_params_),
+                      E.NOMBRE_FINAL: None}.items():
         p = modelo_final.predict(X_test) if nombre == E.NOMBRE_FINAL else m.fit(X_train, y_train).predict(X_test)
         test_todos[nombre] = {"mae": float(mean_absolute_error(y_test, p)), "r2": float(r2_score(y_test, p))}
 
@@ -142,7 +147,7 @@ def main() -> None:
                 "mae_kfold_azar": float(folds_kf[nombre].mean()) if nombre in folds_kf else None,
                 "mae_test": test_todos[nombre]["mae"], "r2_test": test_todos[nombre]["r2"],
                 "es_final": nombre == E.NOMBRE_FINAL}
-        for ref_nombre, clave in [("Piso (mediana)", "piso"), ("Ridge", "ridge")]:
+        for ref_nombre, clave in [("Piso (mediana)", "piso"), ("Ridge", "ridge"), (E.NOMBRE_RF, "rf")]:
             if nombre != ref_nombre:
                 c = E.comparar(folds, ref_nombre, nombre)
                 fila[f"mejora_vs_{clave}"] = float(c["mejora media"])
@@ -150,7 +155,11 @@ def main() -> None:
                 fila[f"folds_gana_vs_{clave}"] = c["folds que gana"]
                 fila[f"supera_ruido_vs_{clave}"] = bool(c["supera el ruido"])
         modelos.append(fila)
-    hist_vs_rf = E.comparar(folds, E.NOMBRE_FINAL, "HistGB (absolute_error)")
+    hist_vs_rf = E.comparar(folds, E.NOMBRE_RF, "HistGB (absolute_error)")
+    final_vs_rf = E.comparar(folds, E.NOMBRE_RF, E.NOMBRE_FINAL)
+
+    log("Pruebas por la corrección de la Entrega 3...")
+    pruebas = E.pruebas_correccion(train, tss, grilla.best_params_)
 
     # 4. Lectura del modelo: tramos, errores, importancia, popularidades, ablación ---------------
     res = test[["movie_id", "title", "release_year", "budget", "revenue", "roi"]].copy()
@@ -175,7 +184,7 @@ def main() -> None:
 
     cols_pop = ["director_popularity", "lead_actor_popularity", "co_star_popularity"]
     spearman_pop = train[cols_pop + ["vote_count"]].corr(method="spearman")["vote_count"][cols_pop]
-    sin_pop = E.rf_ajustado(grilla.best_params_, excluir=cols_pop).fit(X_train, y_train)
+    sin_pop = E.modelo_final(grilla.best_params_, excluir=cols_pop).fit(X_train, y_train)
     mae_sin_pop = mean_absolute_error(y_test, sin_pop.predict(X_test))
 
     log("Ablación por grupos de columnas...")
@@ -183,7 +192,8 @@ def main() -> None:
               "sin popularidades (director y elenco)": cols_pop, "sin productoras": E.COLS_PROD,
               "sin calendario (mes y día)": ["release_month", "release_day_of_week"],
               "sin idioma": ["original_language"], "sin géneros": ["primary_genre", "secondary_genre"],
-              "sin runtime": ["runtime"], "sin release_year": ["release_year"]}
+              "sin runtime": ["runtime"], "sin release_year": ["release_year"],
+              "sin el contexto nuevo (director, actor, saga, palabras clave, países)": E.COLS_CTX}
     ablacion = []
     for nombre, excluir in grupos.items():
         r = cross_validate(E.rf_ajustado(grilla.best_params_, excluir=excluir), X_train, y_train,
@@ -204,7 +214,8 @@ def main() -> None:
     pred["error_abs"] = pred["error_log"].abs()
     pred["factor_error"] = 10 ** pred["error_abs"]
     pred["tramo_roi"] = E.tramo_roi(pred["roi"]).astype(str)
-    columnas = (["movie_id", "title"] + E.COLS_BASE + ["revenue", "vote_average", "vote_count"]
+    columnas = (["movie_id", "title"] + E.COLS_BASE + ["director_name", "lead_actor_name", "collection_name",
+                                                        "revenue", "vote_average", "vote_count"]
                 + [c for c in E.FEATURES if c not in E.COLS_BASE]
                 + ["roi", "y", "y_pred", "multiplo_real", "multiplo_pred", "roi_pred",
                    "error_log", "error_abs", "factor_error", "tramo_roi", "conjunto"])
@@ -222,6 +233,14 @@ def main() -> None:
         conteo = train[c].astype(str).value_counts()
         rangos["categoricas"][c] = {"categorias": conteo.index.tolist(), "conteo": conteo.astype(int).tolist(),
                                     "min_frecuencia": minimo_frecuencia[c]}
+    # Directores, actores y sagas con historia (para elegir en «Probá el modelo»)
+    for clave, nombre in [("director_id", "director_name"), ("lead_actor_id", "lead_actor_name"),
+                          ("collection_id", "collection_name")]:
+        g = (data.dropna(subset=[clave]).groupby([clave, nombre]).size().reset_index(name="peliculas")
+             .sort_values("peliculas", ascending=False))
+        g = g[g["peliculas"] >= 2]
+        rangos["categoricas"][clave] = {"ids": g[clave].astype(int).tolist(), "nombres": g[nombre].astype(str).tolist(),
+                                        "conteo": g["peliculas"].astype(int).tolist()}
     (SALIDA / "rangos.json").write_text(json.dumps(rangos, ensure_ascii=False, indent=1), encoding="utf-8")
 
     # 7. Hallazgo de la Entrega 2: múltiplo mediano por escala de presupuesto ---------------------
@@ -252,11 +271,14 @@ def main() -> None:
         "modelos": modelos,
         "folds": tabla_folds(folds),
         "histgb_vs_final": {k: (v if isinstance(v, str) else float(v)) for k, v in hist_vs_rf.items()},
+        "final_vs_rf": {k: (v if isinstance(v, str) else float(v)) for k, v in final_vs_rf.items()},
+        "pruebas_correccion": pruebas.to_dict("records"),
         "grilla": {"mejores": {k.replace("modelo__", ""): v for k, v in grilla.best_params_.items()},
                    "tabla": tabla_grilla.sort_values("mae").to_dict("records")},
         "final": {
             "nombre": E.NOMBRE_FINAL,
             "params": {k: v for k, v in E.params_rf(grilla.best_params_).items() if k != "n_jobs"},
+            "componentes": ["Random Forest ajustado", "HistGB (absolute_error)", "Ridge"],
             "mae_cv": float(folds[E.NOMBRE_FINAL].mean()), "desvio_cv": float(folds[E.NOMBRE_FINAL].std(ddof=0)),
             "mae_piso_cv": float(folds["Piso (mediana)"].mean()),
             "mae_test": float(mae_final), "factor_test": float(10 ** mae_final),

@@ -6,7 +6,8 @@ a partir de la API oficial de The Movie Database (TMDb).
 
 Capas del modelo medallón:
   * Bronce (land_bronze): Payloads JSON tal como los devolvió TMDb, comprimidos.
-  * Plata (refine_silver + consolidate / load_frozen): Filas tipadas (18 columnas), deduplicadas y validadas.
+  * Plata (refine_silver + consolidate / load_frozen): Filas tipadas (24 columnas), deduplicadas y validadas.
+  * enrich_sagas: completa la posición de cada película dentro de su saga (0 = la primera).
 """
 from __future__ import annotations
 
@@ -22,8 +23,8 @@ from airflow.sdk import Param, dag, task
 from airflow.utils.trigger_rule import TriggerRule
 
 from tmdb import schema
-from tmdb.client import fetch_movie_ids, fetch_movie_payload
-from tmdb.transform import to_row
+from tmdb.client import fetch_collection, fetch_movie_ids, fetch_movie_payload
+from tmdb.transform import saga_positions, to_row
 
 log = logging.getLogger(__name__)
 
@@ -244,11 +245,30 @@ def tmdb_ingest():
             df[c] = pd.to_numeric(df[c], errors="coerce").astype(float)
         for c in schema.TEXTO:
             df[c] = df[c].fillna("Unknown").astype(str)
+        for c in schema.TEXTO_LIBRE:
+            df[c] = df[c].fillna("").astype(str)
 
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         destino = OUTPUT_DIR / "_consolidado.csv"
         df.to_csv(destino, index=False)
         return str(destino)
+
+    @task(retries=2, retry_delay=pendulum.duration(seconds=10))
+    def enrich_sagas(ruta: str) -> str:
+        """Pide cada saga una sola vez y completa saga_position (0 = la primera de la saga)."""
+        import pandas as pd
+
+        df = pd.read_csv(ruta, low_memory=False)
+        posiciones: dict[int, int] = {}
+        for cid in df["collection_id"].dropna().astype(int).unique():
+            try:
+                posiciones.update(saga_positions(fetch_collection(cid).get("parts")))
+            except Exception as e:
+                log.error("Error al obtener la saga %s: %s", cid, e)
+        df["saga_position"] = df["movie_id"].map(posiciones).astype("Int64")
+        df.to_csv(ruta, index=False)
+        log.info("Sagas: %s películas con posición dentro de su saga.", df["saga_position"].notna().sum())
+        return ruta
 
     @task(trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS)
     def validate(**context) -> str:
@@ -318,7 +338,7 @@ def tmdb_ingest():
     batches = discover_batches()
     bronces = land_bronze.expand(batch=batches)
     parciales = refine_silver.expand(lote=bronces)
-    consolidado = consolidate(parciales)
+    consolidado = enrich_sagas(consolidate(parciales))
 
     # Rama respaldo
     respaldo = load_frozen()

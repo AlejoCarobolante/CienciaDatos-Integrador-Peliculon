@@ -8,6 +8,7 @@ import requests
 
 TIMEOUT_SECONDS = 10
 BASE_URL = os.getenv("BASE_URL")
+_SESION = requests.Session()  # reutiliza la conexión entre consultas
 
 
 def get_api_key() -> str:
@@ -41,7 +42,7 @@ def fetch_movie_ids(
     if extra_params:
         params.update(extra_params)
 
-    response = requests.get(url, params=params, timeout=TIMEOUT_SECONDS)
+    response = _SESION.get(url, params=params, timeout=TIMEOUT_SECONDS)
     response.raise_for_status()
     data = response.json()
 
@@ -50,15 +51,25 @@ def fetch_movie_ids(
 
 
 def fetch_movie_payload(movie_id: int) -> dict[str, Any]:
-    """Obtiene el payload completo de una película con sus créditos."""
+    """Obtiene el payload completo de una película con sus créditos y palabras clave."""
     api_key = get_api_key()
     url = f"{BASE_URL}/movie/{movie_id}"
     params = {
         "api_key": api_key,
-        "append_to_response": "credits",
+        "append_to_response": "credits,keywords",
     }
 
-    response = requests.get(url, params=params, timeout=TIMEOUT_SECONDS)
+    response = _SESION.get(url, params=params, timeout=TIMEOUT_SECONDS)
     response.raise_for_status()
     time.sleep(0.05)  # Respeto básico de rate limit
+    return response.json()
+
+
+def fetch_collection(collection_id: int) -> dict[str, Any]:
+    """Obtiene una saga (colección) con todas sus películas y fechas de estreno."""
+    api_key = get_api_key()
+    url = f"{BASE_URL}/collection/{collection_id}"
+    response = _SESION.get(url, params={"api_key": api_key}, timeout=TIMEOUT_SECONDS)
+    response.raise_for_status()
+    time.sleep(0.05)
     return response.json()

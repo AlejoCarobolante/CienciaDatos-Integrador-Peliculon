@@ -76,6 +76,24 @@ def agregar_objetivo(data: pd.DataFrame) -> pd.DataFrame:
     return data.sort_values(["release_year", "release_month", "movie_id"]).reset_index(drop=True)
 
 
+# Palabras clave de TMDb que se conocen antes del estreno (de qué trata y de dónde sale la historia).
+# No se usan palabras que dependan del resultado ni la cantidad de palabras (crece con la popularidad).
+GRUPOS_KEYWORDS = {
+    "kw_secuela": ["sequel"],
+    "kw_remake": ["remake"],
+    "kw_libro": ["based on novel or book", "based on young adult novel"],
+    "kw_comic": ["based on comic", "based on manga", "superhero"],
+    "kw_historia_real": ["based on true story", "biography"],
+    "kw_videojuego": ["based on video game"],
+    "kw_navidad": ["christmas"],
+    "kw_musical": ["musical"],
+    "kw_found_footage": ["found footage"],
+}
+
+# Historias: cómo les fue antes al director, al actor principal y a la saga (mediana de y en años anteriores)
+CLAVES_HISTORIA = {"director": "director_id", "actor": "lead_actor_id", "saga": "collection_id"}
+
+
 @dataclass
 class Referencias:
     """Lo que las features derivadas necesitan saber del resto de las películas.
@@ -90,6 +108,16 @@ class Referencias:
     historia: pd.DataFrame
     mediana_y_global: float
     _cache: dict = field(default_factory=dict, repr=False)
+    _cache_ctx: dict = field(default_factory=dict, repr=False)
+
+    def previas_por(self, anio: int, clave: str) -> tuple[dict, dict]:
+        """Mediana de y y cantidad de películas por director, actor o saga en años estrictamente < anio."""
+        anio = int(anio)
+        if (anio, clave) not in self._cache_ctx:
+            past = self.historia[(self.historia["release_year"] < anio) & self.historia[clave].notna()]
+            g = past.groupby(clave)["y"]
+            self._cache_ctx[(anio, clave)] = (g.median().to_dict(), g.size().to_dict())
+        return self._cache_ctx[(anio, clave)]
 
     def medianas_previas(self, anio: int) -> tuple[dict, float]:
         """Mediana de y por productora y global con las películas de años estrictamente < anio.
@@ -112,7 +140,8 @@ def construir_referencias(data: pd.DataFrame) -> Referencias:
     return Referencias(
         mediana_budget_genero=data.groupby("primary_genre")["budget"].median().to_dict(),
         mediana_budget_global=float(data["budget"].median()),
-        historia=data[["release_year", "primary_production_company", "y"]].reset_index(drop=True),
+        historia=data[["release_year", "primary_production_company", "y"]
+                      + list(CLAVES_HISTORIA.values())].reset_index(drop=True),
         mediana_y_global=float(data["y"].median()),
     )
 
@@ -141,6 +170,31 @@ def agregar_features(data: pd.DataFrame, ref: Referencias) -> pd.DataFrame:
         return por_prod.get(fila["primary_production_company"], global_)
 
     data["prod_hist_roi"] = data[["release_year", "primary_production_company"]].apply(encoding, axis=1)
+
+    # Contexto (Entrega 4): historia del director, del actor principal y de la saga.
+    # Misma regla que la productora: solo películas de años anteriores; sin historia queda vacío.
+    for nombre, clave in CLAVES_HISTORIA.items():
+        hist = pd.Series(np.nan, index=data.index)
+        cant = pd.Series(0.0, index=data.index)
+        for anio, idx in data.groupby("release_year").groups.items():
+            medianas, conteos = ref.previas_por(anio, clave)
+            k = data.loc[idx, clave]
+            hist.loc[idx] = k.map(medianas).astype(float).values
+            cant.loc[idx] = k.map(conteos).fillna(0).astype(float).values
+        data[f"{nombre}_hist"] = hist
+        data[f"{nombre}_n_prev"] = cant
+
+    # Secuela: no es la primera película de su saga. («Pertenece a una saga» no se usa: TMDb crea la saga
+    # cuando hay secuela, y eso pasa cuando a la primera le fue bien. Se conoce después del estreno.)
+    data["es_secuela"] = (pd.to_numeric(data["saga_position"], errors="coerce").fillna(0) > 0).astype(int)
+
+    palabras = data["keywords"].fillna("").astype(str).str.split("|").apply(lambda l: {k.strip() for k in l})
+    for col, lista in GRUPOS_KEYWORDS.items():
+        data[col] = palabras.apply(lambda st, lista=lista: int(any(k in st for k in lista)))
+
+    paises = data["production_countries"].fillna("").astype(str).str.split("|").apply(lambda l: [p for p in l if p])
+    data["paises_n"] = paises.apply(len)
+    data["es_eeuu"] = paises.apply(lambda l: int("US" in l))
     return data
 
 

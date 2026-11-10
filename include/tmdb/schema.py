@@ -33,7 +33,21 @@ VALORACION = [
     "vote_count",
 ]
 
-COLUMNS = IDENTIDAD + TEMPORAL + PRODUCCION + TALENTO + VALORACION
+# Contexto conocido antes del estreno (agregado en la Entrega 4): quién la hace,
+# si es parte de una saga, de qué trata y de dónde es.
+CONTEXTO = [
+    "director_id",
+    "director_name",
+    "lead_actor_id",
+    "lead_actor_name",
+    "collection_id",
+    "collection_name",
+    "saga_position",
+    "production_countries",
+    "keywords",
+]
+
+COLUMNS = IDENTIDAD + TEMPORAL + PRODUCCION + TALENTO + VALORACION + CONTEXTO
 
 # Tipos para validar y castear al final
 
@@ -44,6 +58,10 @@ ENTEROS = [
     "release_day_of_week",
     "runtime",
     "vote_count",
+    "director_id",
+    "lead_actor_id",
+    "collection_id",
+    "saga_position",
 ]
 
 FLOTANTES = [
@@ -62,6 +80,15 @@ TEXTO = [
     "secondary_genre",
     "primary_production_company",
     "co_production_company",
+]
+
+# Texto que puede venir vacío (se completa con "" en vez de "Unknown")
+TEXTO_LIBRE = [
+    "director_name",
+    "lead_actor_name",
+    "collection_name",
+    "production_countries",
+    "keywords",
 ]
 
 # Columnas sin las cuales la fila no sirve para el modelado

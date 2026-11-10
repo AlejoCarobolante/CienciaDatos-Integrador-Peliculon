@@ -79,6 +79,75 @@ def co_star_popularity(cast: list[dict] | None) -> float:
         return 0.0
 
 
+def director_id(crew: list[dict] | None) -> int | None:
+    """ID de TMDb del director (sirve para calcular cómo le fue en películas anteriores)."""
+    for member in crew or []:
+        if member.get("job") == "Director" and member.get("id") is not None:
+            return int(member["id"])
+    return None
+
+
+def lead_actor_id(cast: list[dict] | None) -> int | None:
+    """ID de TMDb del actor principal (order == 0)."""
+    if cast and isinstance(cast, list) and cast[0].get("id") is not None:
+        return int(cast[0]["id"])
+    return None
+
+
+def director_name(crew: list[dict] | None) -> str:
+    for member in crew or []:
+        if member.get("job") == "Director":
+            return str(member.get("name") or "")
+    return ""
+
+
+def lead_actor_name(cast: list[dict] | None) -> str:
+    if cast and isinstance(cast, list):
+        return str(cast[0].get("name") or "")
+    return ""
+
+
+def collection_id(collection: dict | None) -> int | None:
+    """ID de la saga a la que pertenece la película, si pertenece a una."""
+    if collection and collection.get("id") is not None:
+        return int(collection["id"])
+    return None
+
+
+def production_countries(countries: list[dict] | None) -> str:
+    """Códigos ISO de los países de producción, separados por '|'."""
+    return "|".join(c["iso_3166_1"] for c in countries or [] if c.get("iso_3166_1"))
+
+
+def keywords(payload: dict | None) -> str:
+    """Palabras clave de TMDb en minúsculas, separadas por '|'."""
+    lista = (payload or {}).get("keywords") or []
+    return "|".join(str(k.get("name", "")).strip().lower() for k in lista if k.get("name"))
+
+
+def saga_positions(parts: list[dict] | None) -> dict[int, int]:
+    """Posición de cada película dentro de su saga según la fecha de estreno (0 = la primera)."""
+    con_fecha = [p for p in parts or [] if p.get("release_date") and p.get("id") is not None]
+    con_fecha.sort(key=lambda p: p["release_date"])
+    return {int(p["id"]): i for i, p in enumerate(con_fecha)}
+
+
+def contexto(raw: dict[str, Any]) -> dict[str, Any]:
+    """Columnas del bloque CONTEXTO (saga_position se completa después, con la saga entera)."""
+    credits = raw.get("credits") or {}
+    return {
+        "director_id": director_id(credits.get("crew")),
+        "director_name": director_name(credits.get("crew")),
+        "lead_actor_id": lead_actor_id(credits.get("cast")),
+        "lead_actor_name": lead_actor_name(credits.get("cast")),
+        "collection_id": collection_id(raw.get("belongs_to_collection")),
+        "collection_name": str((raw.get("belongs_to_collection") or {}).get("name") or ""),
+        "saga_position": None,
+        "production_countries": production_countries(raw.get("production_countries")),
+        "keywords": keywords(raw.get("keywords")),
+    }
+
+
 def to_row(raw: dict[str, Any]) -> dict[str, Any]:
     """Transforma el JSON de una película a una fila del esquema canónico."""
     r = {c: None for c in schema.COLUMNS}
@@ -127,4 +196,5 @@ def to_row(raw: dict[str, Any]) -> dict[str, Any]:
     except (ValueError, TypeError):
         r["vote_count"] = 0
 
+    r.update(contexto(raw))
     return r

@@ -57,6 +57,8 @@ def cargar_rangos() -> dict:
 def cargar_predicciones() -> pd.DataFrame:
     p = pd.read_parquet(ART / "predicciones.parquet")
     # Columnas de presentación (texto en formato rioplatense para los tooltips)
+    for c in ["director_name", "lead_actor_name", "collection_name"]:
+        p[c] = p[c].fillna("").astype(str)
     p["genero_es"] = p["primary_genre"].map(S.genero_es)
     p["genero_color"] = p["primary_genre"].map(S.genero_grupo)
     p["idioma_es"] = p["original_language"].map(S.idioma_es)
@@ -102,6 +104,13 @@ VAR_ES = {
     "co_star_popularity": "Popularidad del coprotagonista", "director_popularity": "Popularidad del director",
     "power_pack": "Director × protagonista", "release_month": "Mes de estreno",
     "release_day_of_week": "Día de estreno", "is_horror_low_budget": "Terror de bajo presupuesto",
+    "director_hist": "Historia del director", "director_n_prev": "Películas previas del director",
+    "actor_hist": "Historia del protagonista", "actor_n_prev": "Películas previas del protagonista",
+    "saga_hist": "Historia de la saga", "es_secuela": "Es secuela", "kw_secuela": "Palabra clave: secuela",
+    "kw_remake": "Palabra clave: remake", "kw_libro": "Basada en un libro", "kw_comic": "Cómic o superhéroes",
+    "kw_historia_real": "Historia real o biografía", "kw_videojuego": "Basada en un videojuego",
+    "kw_navidad": "Navidad", "kw_musical": "Musical", "kw_found_footage": "Found footage",
+    "paises_n": "Cantidad de países", "es_eeuu": "Producida en EE. UU.",
 }
 
 # Números que se repiten en varias secciones
@@ -127,11 +136,12 @@ with st.sidebar:
 # =============================================================================================
 st.title("¿Cuántas veces recupera una película lo que costó?", anchor="portada")
 st.markdown("**La pregunta:** con lo que se sabe *antes del estreno* (presupuesto, género, idioma, duración, "
-            "productora, elenco y fecha), ¿podemos anticipar cuántas veces recupera una película lo que costó?")
+            "productora, director, elenco, saga y fecha), ¿podemos anticipar cuántas veces recupera una película "
+            "lo que costó?")
 
 st.markdown(
     f"#### Con lo que se sabe antes del estreno, el modelo anticipa el múltiplo de recuperación con un error "
-    f"típico de {S.mult(FIN['factor_test'])}: se equivoca un {S.pct(FIN['mejora_test_pct'])} menos que adivinar "
+    f"típico de {S.mult(FIN['factor_test'])}: se equivoca un {S.pct(FIN['mejora_test_pct'], 1)} menos que adivinar "
     f"siempre la mediana. Es una mejora modesta, y lo que más pesa es el presupuesto.")
 
 c1, c2, c3 = st.columns(3)
@@ -139,7 +149,7 @@ c1.metric("Error típico del modelo", S.mult(FIN["factor_test"]),
           help="10^MAE en el test: películas de 2017–2025 que el modelo nunca vio.")
 c1.caption(f"Arriba o abajo del múltiplo real, en {S.num(M['particion']['n_test'])} películas de "
            f"{anios_test[0]}–{anios_test[1]} que el modelo nunca vio.")
-c2.metric("Menos error que adivinar la mediana", S.pct(FIN["mejora_test_pct"]),
+c2.metric("Menos error que adivinar la mediana", S.pct(FIN["mejora_test_pct"], 1),
           help="(MAE del piso − MAE del modelo) / MAE del piso, en el test.")
 c2.caption(f"El piso (predecir siempre la mediana) se equivoca {S.mult(FIN['factor_piso_test'])}; "
            f"el modelo, {S.mult(FIN['factor_test'])}.")
@@ -336,13 +346,14 @@ st.divider()
 # =============================================================================================
 # 4. TALLO · EL MODELO (Entrega 3)
 # =============================================================================================
-st.header(f"En películas que nunca vio, el modelo se equivoca un {S.pct(FIN['mejora_test_pct'])} menos que "
+st.header(f"En películas que nunca vio, el modelo se equivoca un {S.pct(FIN['mejora_test_pct'], 1)} menos que "
           f"adivinar la mediana: una mejora real, pero chica", anchor="modelo")
 
-orden_modelos = ["Piso (mediana)", "Ridge", "Random Forest", "HistGB (absolute_error)", E.NOMBRE_FINAL]
+orden_modelos = ["Piso (mediana)", "Ridge", "Random Forest", "HistGB (absolute_error)", E.NOMBRE_RF, E.NOMBRE_FINAL]
 nombres_cortos = {"Piso (mediana)": "Piso: siempre la mediana", "Ridge": "Ridge (lineal)",
                   "Random Forest": "Random Forest sin ajustar", "HistGB (absolute_error)": "HistGB (boosting)",
-                  E.NOMBRE_FINAL: "Random Forest ajustado (final)"}
+                  E.NOMBRE_RF: "Random Forest ajustado",
+                  E.NOMBRE_FINAL: "Promedio de los 3 (final)"}
 mm = modelos.loc[orden_modelos].reset_index()
 mm["nombre"] = mm["modelo"].map(nombres_cortos)
 mm["rol"] = np.select([mm["es_final"], mm["modelo"] == "Piso (mediana)"], ["Modelo final", "Piso"], "Otros modelos")
@@ -380,19 +391,23 @@ puntos_m = bm.mark_point(size=170, filled=True, opacity=1, stroke=S.SUPERFICIE, 
     color=alt.Color("rol:N", scale=escala_rol, legend=alt.Legend(title=None)),
     shape=alt.Shape("medida:N", scale=escala_medida, legend=alt.Legend(title=None, labelLimit=320)), tooltip=tip_m)
 mejora_txt = (f"Test: {S.mult(FIN['factor_test'])} contra {S.mult(FIN['factor_piso_test'])} del piso "
-              f"({S.pct(FIN['mejora_test_pct'])} menos error)")
+              f"({S.pct(FIN['mejora_test_pct'], 1)} menos error)")
 nota_m = alt.Chart(pd.DataFrame({"x": [FIN["mae_test"]], "nombre": [nombres_cortos[E.NOMBRE_FINAL]], "t": [mejora_txt]})
                    ).mark_text(align="right", dx=-4, dy=-16, color=S.MODELO, fontSize=12, fontWeight="bold").encode(
     x=alt.X("x:Q", scale=alt.Scale(domain=[0.35, 0.51])), y=y_mod, text="t:N")
-mostrar(alt.layer(desvio, puntos_m, nota_m), alto=300)
+mostrar(alt.layer(desvio, puntos_m, nota_m), alto=330)
 
 rf, ridge = modelos.loc[E.NOMBRE_FINAL], modelos.loc["Ridge"]
+rf_aj = modelos.loc[E.NOMBRE_RF]
+texto_test = (f"En el test también le gana a Ridge ({S.num(rf['mae_test'], 3)} contra {S.num(ridge['mae_test'], 3)})."
+              if ridge["mae_test"] - rf["mae_test"] > 0.01 else
+              f"En el test, en cambio, quedan cerca (Ridge {S.num(ridge['mae_test'], 3)}, modelo final "
+              f"{S.num(rf['mae_test'], 3)}).")
 st.markdown(
     f"El círculo es el error medio en los 5 cortes de validación temporal y la línea, ± un desvío. El rombo es el "
-    f"**test** ({anios_test[0]}–{anios_test[1]}), medido una vez al final. En validación, el Random Forest ajustado "
-    f"le gana a Ridge en {rf['folds_gana_vs_ridge']} cortes. En el test, en cambio, los tres modelos con columnas "
-    f"quedan casi empatados (Ridge {S.num(ridge['mae_test'], 3)}, modelo final {S.num(rf['mae_test'], 3)}). "
-    "Lo que el modelo sí logra, siempre, es ganarle a adivinar.")
+    f"**test** ({anios_test[0]}–{anios_test[1]}), medido una vez al final. El modelo final es el promedio del Random "
+    f"Forest ajustado, HistGB y Ridge. En validación le gana a Ridge en {rf['folds_gana_vs_ridge']} cortes. "
+    f"{texto_test} Lo que el modelo sí logra, siempre, es ganarle a adivinar.")
 
 tramos = pd.DataFrame(M["por_tramo"])
 with como_lo_sabemos():
@@ -448,19 +463,21 @@ contra corte** (algunos períodos son más difíciles para todos): la mejora med
         "MAE test (informativo)": [S.num(modelos.loc[m, "mae_test"], 4) for m in orden_modelos],
     })
     st.dataframe(tabla_m, hide_index=True, width="stretch")
-    hv = M["histgb_vs_final"]
+    hv, fv = M["histgb_vs_final"], M["final_vs_rf"]
     st.markdown(f"""
-✓ = la mejora media supera su desvío. Ridge no le gana al piso por más que el ruido; los árboles sí, y también
-a Ridge. **Por qué el Random Forest ajustado y no HistGB:** los dos pasan el criterio, y entre ellos la diferencia
-es ruido (HistGB mejora {S.num(hv['mejora media'], 4)} con un desvío de {S.num(hv['desvío de la mejora'], 4)}).
-Con un empate, nos quedamos con el que defendimos en la Entrega 3 y el que le gana a Ridge de forma más estable.
+✓ = la mejora media supera su desvío. **Por qué un promedio de tres modelos:** entre el Random Forest ajustado,
+HistGB y el promedio, la diferencia es ruido (el promedio mejora {S.num(fv['mejora media'], 4)} al Random Forest con
+un desvío de {S.num(fv['desvío de la mejora'], 4)}; HistGB, {S.num(hv['mejora media'], 4)} con un desvío de
+{S.num(hv['desvío de la mejora'], 4)}). Elegimos el promedio por estabilidad: es el que le gana a Ridge de forma más
+pareja ({S.num(rf['mejora_vs_ridge'], 4)} ± {S.num(rf['desvio_mejora_vs_ridge'], 4)}, {rf['folds_gana_vs_ridge']}
+cortes) y no depende de un solo modelo. Es el mismo criterio que usamos en la Entrega 3 entre modelos empatados.
 
 **El ajuste del elegido.** Grilla sobre `min_samples_leaf` (1, 5, 10, 20, 40) y `max_features` (0,3, 0,6, 1,0),
 con los mismos 5 cortes. Ganó `min_samples_leaf = {M['grilla']['mejores']['min_samples_leaf']}` y
 `max_features = {S.num(M['grilla']['mejores']['max_features'], 1)}`, con 300 árboles. Entre la mejor y la peor de
 las {len(grilla)} combinaciones hay {S.num(grilla['mae'].max() - grilla['mae'].min(), 4)} de MAE, menos que el
 desvío entre cortes ({S.num(grilla['desvio'].min(), 4)} o más): el modelo es poco sensible a estos hiperparámetros.
-El ajuste mejora {S.num(rf_simple['mae_cv'] - FIN['mae_cv'], 4)} al Random Forest sin ajustar.
+El ajuste mejora {S.num(rf_simple['mae_cv'] - rf_aj['mae_cv'], 4)} al Random Forest sin ajustar.
 
 **El resultado en el test** ({S.num(M['particion']['n_test'])} películas, mirado una vez): MAE
 {S.num(FIN['mae_test'], 4)} ({S.mult(FIN['factor_test'])}), contra {S.num(FIN['mae_piso_test'], 4)}
@@ -519,8 +536,7 @@ Varios «fracasos» del test son estrenos de streaming con una recaudación simb
 sacamos porque eso sería tocar el test después de mirarlo.
 
 **En qué se apoya: importancia por permutación.** Se desordena una columna por vez en el test y se mide cuánto
-sube el error. El presupuesto domina; la que sigue también sale de él (presupuesto comparado con su género) y la
-tercera es la historia de la productora:
+sube el error. Las que más pesan:
 """)
     # Gráfico: importancia por permutación (12 columnas que más pesan).
     #  datos: metricas.json["importancia"]; mapeo: y = columna (ordenada por importancia), x = aumento del MAE
@@ -540,8 +556,9 @@ tercera es la historia de la productora:
     pop = M["popularidades"]
     st.markdown(f"""
 La prueba al revés (sacar un grupo de columnas y volver a validar) confirma lo mismo: sin el presupuesto el error
-sube {S.num(abl.loc[abl['variante'] == 'sin budget', 'cambio'].iloc[0], 4)}; sin las popularidades, *baja*
-{S.num(-abl.loc[abl['variante'].str.startswith('sin popularidades'), 'cambio'].iloc[0], 4)}.
+sube {S.num(abl.loc[abl['variante'] == 'sin budget', 'cambio'].iloc[0], 4)}; sin el contexto nuevo (director,
+actor, saga, palabras clave y países), sube {S.num(abl.loc[abl['variante'].str.startswith('sin el contexto'), 'cambio'].iloc[0], 4)};
+sin las popularidades cambia {S.num(abl.loc[abl['variante'].str.startswith('sin popularidades'), 'cambio'].iloc[0], 4)}.
 
 **La limitación de las popularidades.** TMDb da la popularidad de la persona **hoy**, no la que tenía antes del
 estreno: si una película fue un éxito, su director y su elenco quedan más populares. Su correlación con
@@ -549,9 +566,38 @@ estreno: si una película fue un éxito, su director y su elenco quedan más pop
 {S.num(max(pop['spearman_vote_count'].values()), 2)}. Las dejamos porque el modelo casi no las usa: sin ellas el
 MAE de test da {S.num(pop['mae_test_sin'], 4)} contra {S.num(pop['mae_test_con'], 4)} con ellas.
 
-**Las correcciones de la Entrega 3.**
-- El modelo final es uno solo en todo el notebook, el Random Forest ajustado. La versión anterior describía un
-  Random Forest y entrenaba como final un HistGB.
+**Lo que marcó el profe en la Entrega 3: el modelo achata.** Acertaba cerca de la mediana y no se animaba en los
+extremos. Sugirió probar una penalización que lo aleje de la mediana y mirar también el R². Lo que hicimos:
+- **Más información antes del estreno.** El DAG ahora baja el director, el actor principal, la saga, las palabras
+  clave y los países. Se agregaron a la misma corrida del 24/10 (mismas películas). Con eso se arman la historia del
+  director, del actor y de la saga (mediana del múltiplo en sus películas de años anteriores), si es secuela, de qué
+  tipo de historia se trata (libro, cómic, historia real, remake...) y de dónde es.
+- **Modelo final: el promedio de tres modelos** (Random Forest ajustado, HistGB y Ridge), el que le gana a Ridge
+  de forma más estable.
+- **Resultado:** en el test, el error pasa de ×2,86 (Entrega 3) a {S.mult(FIN['factor_test'])}, y la mejora contra el
+  piso, de 7% a {S.pct(FIN['mejora_test_pct'], 1)}. Lo que más aporta son las columnas nuevas: sin ellas, el Random Forest
+  empeora {S.num(abl.loc[abl['variante'].str.startswith('sin el contexto'), 'cambio'].iloc[0], 4)}.
+- **Las estrategias que pidió probar**, todas contra el Random Forest ajustado con los mismos cortes:
+""")
+    pc = pd.DataFrame(M["pruebas_correccion"])
+    st.dataframe(pd.DataFrame({
+        "Prueba": pc["prueba"], "Qué hace": pc["que_es"], "MAE": pc["mae_cv"].map(lambda v: S.num(v, 4)),
+        "R²": pc["r2_cv"].map(lambda v: S.num(v, 3)),
+        "Mejora (desvío) · cortes": ["—"] + [f"{S.num(a, 4)} ({S.num(b, 4)}) · {c} {'✓' if d else '✗'}"
+                                             for a, b, c, d in zip(pc["mejora"][1:], pc["desvio_mejora"][1:],
+                                                                   pc["cortes_gana"][1:], pc["supera_ruido"][1:])]}),
+        hide_index=True, width="stretch")
+    st.markdown(f"""
+Huber empata con el Random Forest (la diferencia no supera el ruido) y empeora el R²; estirar y dar más peso a los
+extremos **empeoran** en los 5 cortes. El modelo no achata por cómo está configurado, sino
+porque con lo que se sabe antes del estreno es difícil distinguir un fenómeno de una película normal. Lo que sí
+mejora es **darle más información** y promediar modelos. «Pertenece a una saga» parece la mejor de todas, pero es
+una trampa: TMDb crea la saga cuando hay secuela, y eso pasa cuando a la primera le fue bien. Por eso solo usamos
+«es secuela», que sí se sabe antes.
+
+**Las correcciones anteriores, de la misma entrega.**
+- El modelo final es uno solo en todo el notebook. La versión de las correcciones describía un Random Forest y
+  entrenaba como final un HistGB.
 - Ese HistGB usaba `loss="huber"`, que **no existe** en `HistGradientBoostingRegressor` (y `quantile` solo aplica
   con `loss="quantile"`): el notebook no corría. El candidato de boosting quedó con `loss="absolute_error"`.
 - `prod_hist_roi` (historia de la productora) usa solo años **estrictamente anteriores** al estreno.
@@ -560,8 +606,8 @@ MAE de test da {S.num(pop['mae_test_sin'], 4)} contra {S.num(pop['mae_test_con']
 - El test se miró dos veces en la Entrega 3 (para limpiar recaudaciones imposibles) y, al corregir, se reportó el
   test de todos los candidatos como información. La elección se hizo con la validación.
 
-**Por qué Streamlit y no una página HTML.** El modelo final es un ensamble de 300 árboles: no hay una fórmula
-corta que se pueda escribir dentro de una página para calcular un caso nuevo. Streamlit corre Python, así que
+**Por qué Streamlit y no una página HTML.** El modelo final promedia un bosque de 300 árboles, HistGB y Ridge: no
+hay una fórmula corta que se pueda escribir dentro de una página para calcular un caso nuevo. Streamlit corre Python, así que
 carga el mismo `modelo.joblib` que generó `build_app.py` y aplica las mismas features.
 La otra salida era llevar al navegador un modelo cuya fórmula se puede escribir: Ridge. Queda a
 {S.num(ridge['mae_cv'] - FIN['mae_cv'], 4)} de MAE del elegido, menos que un desvío entre cortes
@@ -577,7 +623,7 @@ st.divider()
 # 5 y 6. COPA
 # =============================================================================================
 st.header("Ahora te toca a vos", anchor="copa")
-st.markdown("Ya sabés qué mirar: el presupuesto manda, el modelo achata las puntas y se equivoca, en promedio, "
+st.markdown("Ya sabés qué mirar: el presupuesto manda, el modelo todavía achata las puntas y se equivoca, en promedio, "
             f"{S.mult(FIN['factor_test'])}. Recorré las películas o cargá una nueva.")
 tab_explora, tab_proba = st.tabs(["Explorá las películas", "Probá el modelo"])
 
@@ -680,6 +726,9 @@ with tab_explora:
         st.markdown(f"{f['genero_es']} · {f['idioma_es']} · {int(f['runtime'])} min · "
                     f"{S.MESES[int(f['release_month']) - 1].lower()}, {S.DIAS[int(f['release_day_of_week'])].lower()} · "
                     f"{f['primary_production_company']}  \n"
+                    f"Dirige {f['director_name'] or 'sin dato'} · protagoniza {f['lead_actor_name'] or 'sin dato'}"
+                    + (f" · {f['collection_name']}" + (" (secuela)" if f['es_secuela'] else " (primera de la saga)")
+                       if f['collection_name'] else "") + "  \n"
                     f"**Error:** {f['error_txt']} (tramo real: {f['tramo_roi']}). {nota_conj}  \n"
                     f"Después del estreno (no lo usa el modelo): {S.num(f['vote_average'], 1)} de 10 con "
                     f"{S.num(f['vote_count'])} votos.")
@@ -737,6 +786,35 @@ with tab_proba:
                    f"{S.num(num_r['director_popularity']['mediana'], 1)} (director), "
                    f"{S.num(num_r['lead_actor_popularity']['mediana'], 1)} (protagonista) y "
                    f"{S.num(num_r['co_star_popularity']['mediana'], 1)} (coprotagonista).")
+        NUEVO = None
+
+        def lista(clave):
+            c = cat_r[clave]
+            return [NUEVO] + c["ids"], dict(zip(c["ids"], c["nombres"])), dict(zip(c["ids"], c["conteo"]))
+
+        dir_ids, dir_nom, dir_cnt = lista("director_id")
+        act_ids, act_nom, act_cnt = lista("lead_actor_id")
+        saga_ids, saga_nom, saga_cnt = lista("collection_id")
+        h1, h2 = st.columns(2)
+        director = h1.selectbox("Director", dir_ids, format_func=lambda i: "Otro o primera película" if i is None
+                                else f"{dir_nom[i]} ({dir_cnt[i]} películas)",
+                                help="Directores con 2 o más películas en el dataset. El modelo usa cómo les fue antes.")
+        actor = h2.selectbox("Actor o actriz principal", act_ids, format_func=lambda i: "Otro o sin historia" if i is None
+                             else f"{act_nom[i]} ({act_cnt[i]} películas)")
+        s1, s2 = st.columns([1, 2])
+        secuela = s1.checkbox("Es una secuela", help="No es la primera película de su saga.")
+        saga = s2.selectbox("Saga", saga_ids, format_func=lambda i: "Ninguna u otra" if i is None
+                            else f"{saga_nom[i]} ({saga_cnt[i]} películas)",
+                            help="Si es secuela de una saga conocida, el modelo usa cómo les fue a las anteriores.")
+        GRUPOS_ES = {"kw_libro": "Basada en un libro", "kw_comic": "Cómic o superhéroes",
+                     "kw_historia_real": "Historia real o biografía", "kw_remake": "Remake",
+                     "kw_videojuego": "Basada en un videojuego", "kw_navidad": "Navidad", "kw_musical": "Musical",
+                     "kw_found_footage": "Found footage"}
+        t1, t2, t3 = st.columns([2, 1, 1])
+        temas = t1.multiselect("De qué se trata", list(GRUPOS_ES), format_func=GRUPOS_ES.get,
+                               placeholder="Ninguna de estas")
+        eeuu = t2.checkbox("Producida en EE. UU.", value=True)
+        n_paises = t3.number_input("Países que la producen", min_value=1, max_value=10, value=1, step=1)
         enviado = st.form_submit_button("Predecir", type="primary")
 
     # --- Validación: avisos claros si algo está fuera de lo que vio el modelo ---------------
@@ -785,7 +863,18 @@ with tab_proba:
         "co_production_company": "__otra__" if prod2 == OTRA else prod2,
         "director_popularity": pop_dir, "lead_actor_popularity": pop_lead, "co_star_popularity": pop_co,
     }])
-    caso = F.agregar_features(caso, ref)  # star_power_ratio, ..., budget_vs_genre_median, prod_hist_roi
+    palabras = [F.GRUPOS_KEYWORDS[g][0] for g in temas] + (["sequel"] if secuela else [])
+    paises = (["US"] if eeuu else []) + [f"P{i}" for i in range(int(n_paises) - (1 if eeuu else 0))]
+    caso = caso.assign(director_id=director, lead_actor_id=actor, collection_id=saga,
+                       saga_position=1 if secuela else 0, keywords="|".join(palabras),
+                       production_countries="|".join(paises))
+    caso = F.agregar_features(caso, ref)  # mismas features que el notebook, incluidas las historias
+    if director is None or actor is None:
+        notas.append("Sin director o actor con historia, el modelo completa ese dato con la mediana "
+                     "(así lo trata también cuando entrena).")
+    if secuela and saga is None:
+        notas.append("Marcaste secuela sin elegir una saga conocida: el modelo usa que es secuela, pero no tiene "
+                     "cómo les fue a las anteriores.")
     y_hat = float(modelo.predict(caso[E.FEATURES])[0])
     multiplo = 10 ** y_hat
     factor = FIN["factor_test"]
@@ -809,19 +898,17 @@ with tab_proba:
                        "Ni el extremo de arriba recupera lo invertido." if alto < 1 else
                        "El rango cruza ×1: puede ganar o perder plata."))
         st.caption(f"El piso (adivinar la mediana) diría siempre {S.mult(10 ** FIN['mediana_piso_y'])}.")
+        CALCULADAS = ["star_power_ratio", "director_leverage", "director_vs_cast", "power_pack",
+                      "budget_vs_genre_median", "is_horror_low_budget", "prod_hist_roi", "director_hist",
+                      "actor_hist", "saga_hist", "es_secuela"]
         with st.expander("Qué calculó la app con tus datos"):
             st.dataframe(pd.DataFrame({
-                "Columna": [VAR_ES.get(c, c) for c in ["star_power_ratio", "director_leverage", "director_vs_cast",
-                                                       "power_pack", "budget_vs_genre_median", "is_horror_low_budget",
-                                                       "prod_hist_roi"]],
-                "Valor": [S.num(caso[c].iloc[0], 3) for c in ["star_power_ratio", "director_leverage",
-                                                              "director_vs_cast", "power_pack",
-                                                              "budget_vs_genre_median", "is_horror_low_budget",
-                                                              "prod_hist_roi"]]}), hide_index=True,
-                width="stretch")
-            st.caption("Con la misma función que el notebook (include/modelo/features.py). La mediana por género y la "
-                       "historia de la productora (mediana de log10 del múltiplo en los años anteriores al estreno) "
-                       "salen de las películas con las que se construyó el modelo.")
+                "Columna": [VAR_ES.get(c, c) for c in CALCULADAS],
+                "Valor": ["sin historia" if pd.isna(caso[c].iloc[0]) else S.num(caso[c].iloc[0], 3)
+                          for c in CALCULADAS]}), hide_index=True, width="stretch")
+            st.caption("Con la misma función que el notebook (include/modelo/features.py). La mediana por género y las "
+                       "historias de la productora, el director, el actor y la saga (mediana de log10 del múltiplo en "
+                       "los años anteriores al estreno) salen de las películas con las que se construyó el modelo.")
     with r2:
         # Gráfico: dónde cae tu película en el panorama.
         #  datos: predicciones.parquet (todas, en gris) + tu caso (una fila)

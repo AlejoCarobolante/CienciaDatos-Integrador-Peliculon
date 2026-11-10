@@ -2,12 +2,13 @@
 
 Proyecto integrador de Ciencia de Datos · UTN FRM 2026.
 
-**La pregunta:** con lo que se sabe *antes del estreno* (presupuesto, género, idioma, duración, productora, elenco y
-fecha), ¿podemos anticipar cuántas veces recupera una película lo que costó?
+**La pregunta:** con lo que se sabe *antes del estreno* (presupuesto, género, idioma, duración, productora, director,
+elenco, saga y fecha), ¿podemos anticipar cuántas veces recupera una película lo que costó?
 
-**El hallazgo:** sí, pero poco. En películas de 2017–2025 que nunca vio, el modelo (un Random Forest ajustado)
-anticipa el múltiplo `recaudación / presupuesto` con un error típico de **×2,86**, un **7%** menos que adivinar
-siempre la mediana (×3,11). Lo que más pesa es el presupuesto: las películas baratas multiplican mucho más lo que
+**El hallazgo:** sí, pero poco. En películas de 2017–2025 que nunca vio, el modelo (el promedio de un Random Forest
+ajustado, HistGB y Ridge) anticipa el múltiplo `recaudación / presupuesto` con un error típico de **×2,67**, un
+**13,5%** menos que adivinar siempre la mediana (×3,11). En la Entrega 3 era ×2,86 (7% menos): la mejora vino de
+sumar director, actor, saga, palabras clave y países, que se conocen antes del estreno. Lo que más pesa es el presupuesto: las películas baratas multiplican mucho más lo que
 cuestan (mediana ×18 con menos de 1 millón de dólares, ×2 entre 10 y 100 millones).
 
 **App:** _pendiente de publicar en Streamlit Community Cloud_ (ver [Cómo se publica](#cómo-se-publica)).
@@ -19,7 +20,9 @@ cuestan (mediana ×18 con menos de 1 millón de dólares, ×2 entre 10 y 100 mil
 ```
 dags/tmdb_ingest.py          DAG de Airflow: TMDb -> bronce -> plata -> include/output/movies_<fecha>.csv
 include/tmdb/                cliente de la API, esquema y transformación JSON -> fila
-include/frozen/ultimo_ok.csv dataset versionado (corrida full del 24/10/2026: 9.940 películas x 18 columnas)
+  enriquecer.py              agrega las columnas de CONTEXTO a un CSV ya generado, sin cambiar las demás
+include/frozen/ultimo_ok.csv dataset versionado (corrida full del 24/10/2026: 9.940 películas x 27 columnas;
+                             las 9 de CONTEXTO se agregaron el 10/11 con include/tmdb/enriquecer.py)
 include/output/              corridas propias del DAG (en .gitignore: no se sube)
 include/modelo/              lógica compartida por el notebook, build_app.py y la app
   features.py                carga, filtros de alcance, objetivo y features derivadas
@@ -53,9 +56,20 @@ Requisitos: Docker y la [CLI de Astronomer](https://www.astronomer.io/docs/astro
 3. En http://localhost:8080, disparar el DAG **`tmdb_ingest`** con el parámetro `mode = full`
    (`subset` baja ~120 películas para probar).
 4. El DAG hace muestreo estratificado (4.000 más populares, 3.000 peor calificadas y 3.000 de mayor taquilla, todas
-   con al menos 100 votos), guarda el JSON crudo en la capa bronce, arma la capa plata (18 columnas, sin duplicados,
-   validada) y publica `include/output/movies_<fecha>.csv`. También actualiza `include/frozen/ultimo_ok.csv`, que
+   con al menos 100 votos), guarda el JSON crudo en la capa bronce, arma la capa plata (27 columnas, sin duplicados,
+   validada), completa la posición de cada película en su saga (`enrich_sagas`) y publica
+   `include/output/movies_<fecha>.csv`. También actualiza `include/frozen/ultimo_ok.csv`, que
    usa como respaldo si la API no responde.
+
+**Columnas de CONTEXTO (Entrega 4):** director, actor principal y saga (id y nombre), posición dentro de la saga,
+países de producción y palabras clave. Se conocen antes del estreno y dan la historia del director, del actor y de
+la saga. Para agregarlas a la corrida del 24/10 sin volver a muestrear (una corrida nueva trae otras películas, porque
+la popularidad de TMDb cambia todos los días):
+
+```bash
+cd include
+TMDB_API_KEY=<tu clave> BASE_URL=https://api.themoviedb.org/3 python -m tmdb.enriquecer frozen/ultimo_ok.csv
+```
 
 ## 2. Correr los notebooks (Entregas 2 y 3)
 
@@ -91,12 +105,12 @@ streamlit run app/streamlit_app.py
 ```
 
 `build_app.py` toma el CSV más reciente (o `include/frozen/ultimo_ok.csv` si no hay ninguno), aplica los mismos
-filtros, features, partición temporal, pipeline y semilla (42) que el notebook, entrena el Random Forest ajustado con
-el 80% de entrenamiento y guarda los artefactos en `app/artefactos/`. Al final controla que el MAE de test coincida con
+filtros, features, partición temporal, pipeline y semilla (42) que el notebook, entrena el modelo final (promedio de
+Random Forest ajustado, HistGB y Ridge) con el 80% de entrenamiento y guarda los artefactos en `app/artefactos/`. Al final controla que el MAE de test coincida con
 el que imprimió el notebook:
 
 ```
-MAE test notebook = 0.4569 | MAE test build_app = 0.4569
+MAE test notebook = 0.4267 | MAE test build_app = 0.4267
 ```
 
 Si no coinciden, el script falla. **Si cambian los datos:** correr el DAG, ejecutar `presentacion3.ipynb` (paso 2) y
@@ -110,7 +124,7 @@ La app está en Streamlit Community Cloud, conectada a este repositorio:
 | Campo | Valor |
 |---|---|
 | Repository | `AlejoCarobolante/CienciaDatos-Integrador-Peliculon` |
-| Branch | `presentacion4` |
+| Branch | `mejoras-tmdb` |
 | Main file path | `app/streamlit_app.py` |
 | Python version (Advanced settings) | 3.12 |
 | Dependencias | `app/requirements.txt` (Cloud lo busca primero en la carpeta del archivo principal) |
