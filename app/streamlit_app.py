@@ -865,13 +865,17 @@ with tab_proba:
     }])
     palabras = [F.GRUPOS_KEYWORDS[g][0] for g in temas] + (["sequel"] if secuela else [])
     paises = (["US"] if eeuu else []) + [f"P{i}" for i in range(int(n_paises) - (1 if eeuu else 0))]
-    caso = caso.assign(director_id=director, lead_actor_id=actor, collection_id=saga,
+    # La saga solo cuenta si es secuela: la primera película de una saga no tiene películas anteriores
+    caso = caso.assign(director_id=director, lead_actor_id=actor, collection_id=saga if secuela else None,
                        saga_position=1 if secuela else 0, keywords="|".join(palabras),
                        production_countries="|".join(paises))
     caso = F.agregar_features(caso, ref)  # mismas features que el notebook, incluidas las historias
     if director is None or actor is None:
         notas.append("Sin director o actor con historia, el modelo completa ese dato con la mediana "
                      "(así lo trata también cuando entrena).")
+    if saga is not None and not secuela:
+        notas.append("Elegiste una saga sin marcar «Es una secuela»: si es la primera de la saga, no hay películas "
+                     "anteriores, así que el modelo no usa la saga.")
     if secuela and saga is None:
         notas.append("Marcaste secuela sin elegir una saga conocida: el modelo usa que es secuela, pero no tiene "
                      "cómo les fue a las anteriores.")
