@@ -7,11 +7,11 @@ elenco, saga y fecha), ¿podemos anticipar cuántas veces recupera una película
 
 **El hallazgo:** sí, pero poco. En películas de 2017–2025 que nunca vio, el modelo (el promedio de un Random Forest
 ajustado, HistGB y Ridge) anticipa el múltiplo `recaudación / presupuesto` con un error típico de **×2,67**, un
-**13,5%** menos que adivinar siempre la mediana (×3,11). En la Entrega 3 era ×2,86 (7% menos): la mejora vino de
+**13,5%** menos que adivinar siempre la mediana (×3,11). En la Entrega 3 era ×2,87 (7% menos): la mejora vino de
 sumar director, actor, saga, palabras clave y países, que se conocen antes del estreno. Lo que más pesa es el presupuesto: las películas baratas multiplican mucho más lo que
 cuestan (mediana ×18 con menos de 1 millón de dólares, ×2 entre 10 y 100 millones).
 
-**App:** _pendiente de publicar en Streamlit Community Cloud_ (ver [Cómo se publica](#cómo-se-publica)).
+**App:** https://cienciadatos-integrador-peliculon.streamlit.app
 
 ---
 
@@ -119,12 +119,12 @@ ni el entrenamiento, solo lee los artefactos.
 
 ## Cómo se publica
 
-La app está en Streamlit Community Cloud, conectada a este repositorio:
+La app está en Streamlit Community Cloud (https://cienciadatos-integrador-peliculon.streamlit.app), conectada a este repositorio:
 
 | Campo | Valor |
 |---|---|
 | Repository | `AlejoCarobolante/CienciaDatos-Integrador-Peliculon` |
-| Branch | `mejoras-tmdb` |
+| Branch | `mejoras` |
 | Main file path | `app/streamlit_app.py` |
 | Python version (Advanced settings) | 3.12 |
 | Dependencias | `app/requirements.txt` (Cloud lo busca primero en la carpeta del archivo principal) |
