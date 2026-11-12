@@ -808,7 +808,7 @@ tl = tramos.melt(id_vars=["tramo_es", "peliculas"], value_vars=["real", "con"], 
 tl["valor"] = tl["valor"].map({"real": "Lo que pasó de verdad", "con": "Lo que dijo el modelo"})
 tl["multiplo_txt"] = tl["multiplo"].map(lambda v: S.mult(v, 2))
 titulo_grafico("¿Dónde acierta y dónde falla?",
-               "Películas del examen agrupadas por lo que les pasó de verdad. Gris = lo real (típico del grupo); "
+               "Películas del examen agrupadas por lo que les pasó de verdad. Blanco = lo real (típico del grupo); "
                "violeta = lo que dijo el modelo. Cuanto más larga la línea, más le erra.")
 # Gráfico: lo real contra lo predicho, por tramo de resultado (test).
 #  datos: metricas.json["por_tramo"] (mediana del múltiplo real y del predicho en cada tramo), en formato largo
@@ -1037,7 +1037,7 @@ ext["valor"] = ext["valor"].map({"real": "Lo que pasó de verdad", "sin": "Sin l
                                  "con": "Con los datos nuevos (final)"})
 ext["multiplo_txt"] = ext["multiplo"].map(lambda v: S.mult(v, 2))
 titulo_grafico("¿Se animó más en las puntas?",
-               "El mismo gráfico de la sección 3, con el modelo sin los datos nuevos (gris claro) y con ellos (violeta).")
+               "El mismo gráfico de la sección 3, con el modelo sin los datos nuevos (gris) y con ellos (violeta).")
 # Gráfico: lo real contra lo predicho con y sin las columnas nuevas, por tramo de resultado (test).
 #  datos: metricas.json["por_tramo"] (mediana real, predicha con y sin columnas nuevas), en formato largo
 #  mapeo: y = tramo, x = múltiplo (escala LOG), color = real / sin / con
@@ -1472,8 +1472,8 @@ with tab_proba:
         # Gráfico: dónde cae tu película en el panorama.
         #  datos: predicciones.parquet (todas, en gris) + tu caso (una fila)
         #  mapeo: x = presupuesto (log), y = múltiplo (log), las mismas escalas que «Explorá»
-        #  marcas: círculos grises = múltiplo real de las películas; regla violeta = rango típico de error;
-        #          rombo violeta = lo que predice el modelo para tu película
+        #  marcas: círculos grises = múltiplo real de las películas; regla dorada = rango típico de error;
+        #          rombo dorado = lo que predice el modelo para tu película
         fondo = alt.Chart(P[["budget", "multiplo_real"]]).mark_circle(size=14, color=S.GRIS_1, opacity=0.45).encode(
             x=alt.X("budget:Q", scale=S.escala_budget_log(), axis=S.eje_budget()),
             y=alt.Y("multiplo_real:Q", scale=S.escala_multiplo_log(),
