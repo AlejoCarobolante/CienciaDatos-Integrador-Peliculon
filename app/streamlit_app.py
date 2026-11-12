@@ -1386,8 +1386,12 @@ if "pb_budget" not in st.session_state:
 
 def armar_casos(base: dict, budgets) -> pd.DataFrame:
     """Una fila por presupuesto, con las columnas derivadas y el recorte a lo que vio el modelo."""
-    filas = pd.DataFrame([{**base, "budget": float(b)} for b in budgets])
-    filas = F.agregar_features(filas, ref)
+    return armar_filas([{**base, "budget": float(b)} for b in budgets])
+
+
+def armar_filas(casos: list[dict]):
+    """Una fila por caso, con las columnas derivadas (features.py) y el recorte a lo que vio el modelo."""
+    filas = F.agregar_features(pd.DataFrame(casos), ref)
     recortadas = set()
     for c in COLS_RECORTE:
         if c == "release_year" and (filas[c] <= ANIO_MAX_TEST).all():
@@ -1588,6 +1592,87 @@ def proba_el_modelo():
             st.warning(a)
         for n_ in notas:
             st.caption("ℹ️ " + n_)
+
+    p_izq, p_der = st.columns(2, gap="large")
+    with p_izq:
+        # Películas parecidas: mismo género principal y misma condición de secuela (si hay suficientes), las más
+        # cercanas en presupuesto (log10) y año. Es una referencia para leer la incertidumbre, no es el modelo.
+        cand = P[P["movie_id"] != (real or -1)]
+        gen = base["primary_genre"]
+        filtro = (cand["primary_genre"] == gen) & (cand["es_secuela"] == int(secuela))
+        if filtro.sum() >= 5:
+            cand = cand[filtro]
+        elif (cand["primary_genre"] == gen).sum() >= 5:
+            cand = cand[cand["primary_genre"] == gen]
+        dist_p = (np.log10(cand["budget"]) - np.log10(budget)).abs() + 0.02 * (cand["release_year"] - base["release_year"]).abs()
+        par = cand.loc[dist_p.nsmallest(5).index]
+        med_par = float(par["multiplo_real"].median())
+        st.markdown("<p class='grafico-titulo'>Películas parecidas a la tuya</p>"
+                    "<p class='grafico-bajada'>Del mismo género" + (" y también secuelas" if secuela else "")
+                    + ", con presupuesto y año parecidos. Lo que les pasó de verdad muestra por qué el margen es grande.</p>",
+                    unsafe_allow_html=True)
+        filas_html = "".join(
+            f"<div style='display:flex;justify-content:space-between;gap:.8rem;padding:.45rem .2rem;"
+            f"border-bottom:1px solid {S.GRILLA}'><span style='color:{S.TINTA}'>{r.title} "
+            f"<span style='color:{S.TINTA_SUAVE}'>({r.release_year} · {S.usd_corto(r.budget)})</span></span>"
+            f"<b style='color:{S.REAL if r.multiplo_real >= 1 else S.ERROR_MAS}'>{S.mult(r.multiplo_real)}</b></div>"
+            for r in par.itertuples())
+        st.markdown(f"<div style='background:{S.PANEL};border:1px solid {S.GRILLA};border-radius:12px;padding:.4rem .9rem'>"
+                    f"{filas_html}<div style='padding:.55rem .2rem 0 .2rem;color:{S.TINTA_2};font-size:.92rem'>"
+                    f"La del medio recuperó <b style='color:{S.TINTA}'>{S.mult(med_par)}</b>; el modelo dice "
+                    f"<b style='color:{S.DORADO}'>{S.mult(multiplo)}</b> para la tuya.</div></div>", unsafe_allow_html=True)
+
+    with p_der:
+        # Qué mueve la predicción: la misma película cambiando un solo dato por vez.
+        variantes = [("Con el doble de presupuesto", {}, budget * 2), ("Con la mitad de presupuesto", {}, budget / 2)]
+        if secuela:
+            variantes.append(("Si no fuera secuela", {"collection_id": None, "saga_position": 0,
+                                                       "keywords": base["keywords"].replace("sequel", "")}, budget))
+        else:
+            variantes.append(("Si fuera secuela", {"saga_position": 1, "keywords": (base["keywords"] + "|sequel").strip("|")},
+                              budget))
+        for g, nombre_g in [("Horror", "de terror"), ("Action", "de acción"), ("Comedy", "comedia")]:
+            if base["primary_genre"] != g and g in opciones_cat("primary_genre"):
+                variantes.append((f"Si fuera {nombre_g}", {"primary_genre": g}, budget))
+        if base["release_month"] != 12:
+            variantes.append(("Si se estrenara en diciembre", {"release_month": 12}, budget))
+        if base["release_month"] != 7:
+            variantes.append(("Si se estrenara en julio", {"release_month": 7}, budget))
+        variantes.append(("Con un protagonista muy conocido",
+                          {"lead_actor_popularity": float(num_r["lead_actor_popularity"]["p99"])}, budget))
+        filas_v, _ = armar_filas([{**base, **cambio, "budget": float(b)} for _, cambio, b in variantes])
+        pred_v = 10 ** modelo.predict(filas_v[E.FEATURES])
+        mov = pd.DataFrame({"cambio": [v[0] for v in variantes], "multiplo": pred_v})
+        mov["razon"] = mov["multiplo"] / multiplo
+        mov["log"] = np.log10(mov["razon"])
+        mov["sentido"] = np.where(mov["razon"] >= 1, "Sube", "Baja")
+        mov["txt"] = [f"{S.mult(m)} ({'+' if r >= 1 else '−'}{S.pct(abs(r - 1))})" for m, r in zip(mov["multiplo"], mov["razon"])]
+        mov = mov.sort_values("log", ascending=False)
+        st.markdown("<p class='grafico-titulo'>¿Qué mueve la predicción?</p>"
+                    f"<p class='grafico-bajada'>La misma película cambiando un solo dato. Hoy el modelo dice "
+                    f"{S.mult(multiplo)}.</p>", unsafe_allow_html=True)
+        # Gráfico: sensibilidad de la predicción a un cambio por vez.
+        #  datos: predicciones del modelo para variantes de tu película (una columna cambiada por fila)
+        #  mapeo: y = cambio (ordenado de lo que más sube a lo que más baja), x = log10(predicción variante / actual)
+        #         (escala simétrica alrededor de 0 = no cambia), color = sube (verde) o baja (gris)
+        #  marcas: barra horizontal + texto con el nuevo múltiplo y el cambio en %
+        lim = max(0.15, float(mov["log"].abs().max()) * 2.6)
+        y_mv = alt.Y("cambio:N", sort=list(mov["cambio"]), title=None, axis=alt.Axis(labelLimit=260, labelFontSize=12))
+        mostrar(alt.layer(
+            alt.Chart(mov).mark_bar(height=18, cornerRadius=3).encode(
+                x=alt.X("log:Q", scale=alt.Scale(domain=[-lim, lim]),
+                        axis=alt.Axis(title="◀ baja · sube ▶", grid=False, ticks=False, labels=False)),
+                y=y_mv, color=alt.Color("sentido:N", scale=alt.Scale(domain=["Sube", "Baja"], range=["#47b47d", S.GRIS_1]),
+                                        legend=None),
+                tooltip=[alt.Tooltip("cambio:N", title="Cambio"), alt.Tooltip("txt:N", title="El modelo diría")]),
+            alt.Chart(mov).mark_text(align="left", dx=6, fontSize=11.5, color=S.TINTA).encode(
+                x=alt.X("log:Q", scale=alt.Scale(domain=[-lim, lim])), y=y_mv, text="txt:N",
+                ).transform_filter(alt.datum.log >= 0),
+            alt.Chart(mov).mark_text(align="right", dx=-6, fontSize=11.5, color=S.TINTA).encode(
+                x=alt.X("log:Q", scale=alt.Scale(domain=[-lim, lim])), y=y_mv, text="txt:N",
+                ).transform_filter(alt.datum.log < 0),
+            alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(color=S.TINTA_SUAVE).encode(x="x:Q"),
+        ), alto=40 + 30 * len(mov))
 
 
 with tab_proba:
