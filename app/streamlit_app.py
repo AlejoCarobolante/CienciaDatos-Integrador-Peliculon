@@ -96,33 +96,59 @@ if sklearn.__version__ != M["entorno"]["scikit_learn"]:
 # =============================================================================================
 st.markdown(f"""
 <style>
-.block-container {{max-width: 1180px; padding-top: 2.2rem;}}
-div[data-testid="stMarkdownContainer"] p.kicker, .kicker {{font-size: .82rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: {S.MODELO};
-          margin: 0 0 .2rem 0;}}
-div[data-testid="stMarkdownContainer"] p.titulo-seccion, .titulo-seccion {{font-size: 2.0rem; line-height: 1.18; font-weight: 750; color: {S.TINTA}; margin: 0 0 .6rem 0;}}
-div[data-testid="stMarkdownContainer"] p.bajada, .bajada {{font-size: 1.08rem; color: {S.TINTA_2}; margin-bottom: 1.2rem; max-width: 60rem;}}
-div[data-testid="stMarkdownContainer"] p.grafico-titulo, .grafico-titulo {{font-size: 1.05rem; font-weight: 700; color: {S.TINTA}; margin: 1.1rem 0 .1rem 0;}}
-div[data-testid="stMarkdownContainer"] p.grafico-bajada, .grafico-bajada {{font-size: .92rem; color: {S.TINTA_2}; margin: 0 0 .3rem 0;}}
-.pase {{border-left: 4px solid {S.MODELO}; background: #f3f1fd; padding: .85rem 1.1rem; border-radius: 0 10px 10px 0;
-        margin: 1.6rem 0 .4rem 0; color: {S.TINTA}; font-size: 1.02rem;}}
-.pase b {{color: {S.MODELO};}}
-.tarjetas {{display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .9rem; margin: 1rem 0 .4rem 0;}}
-.tarjeta {{background: #f3f2ee; border-radius: 12px; padding: 1rem 1.1rem;}}
-.tarjeta .rotulo {{font-size: .86rem; color: {S.TINTA_2};}}
-.tarjeta .valor {{font-size: 2.1rem; font-weight: 750; color: {S.TINTA}; line-height: 1.15; margin: .15rem 0;}}
-.tarjeta .valor.modelo {{color: {S.MODELO};}}
-.tarjeta .nota {{font-size: .86rem; color: {S.TINTA_2};}}
-.flujo {{display: flex; gap: .4rem; align-items: stretch; flex-wrap: wrap; margin: .6rem 0 .2rem 0;}}
-.paso {{flex: 1 1 0; min-width: 0; background: #ffffff; border: 1px solid {S.GRILLA}; border-radius: 10px; padding: .7rem .8rem;}}
-.paso .n {{font-size: .75rem; font-weight: 700; color: {S.MODELO}; letter-spacing: .08em;}}
-.paso .t {{font-weight: 700; color: {S.TINTA}; font-size: .98rem;}}
-.paso .d {{font-size: .84rem; color: {S.TINTA_2};}}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;750;850&display=swap');
+html, body, .stMarkdown p, .stMarkdown li, h1, h2, h3 {{font-family: Inter, system-ui, sans-serif;}}
+.block-container {{max-width: 1200px; padding-top: 2rem;}}
+div[data-testid="stMarkdownContainer"] p.kicker, .kicker {{font-size: .8rem; font-weight: 750; letter-spacing: .16em;
+    text-transform: uppercase; color: {S.DORADO}; margin: 0 0 .35rem 0;}}
+div[data-testid="stMarkdownContainer"] p.titulo-seccion, .titulo-seccion {{font-size: 2.15rem; line-height: 1.15;
+    font-weight: 850; color: {S.TINTA}; margin: 0 0 .7rem 0; letter-spacing: -.01em;}}
+div[data-testid="stMarkdownContainer"] p.bajada, .bajada {{font-size: 1.1rem; color: {S.TINTA_2}; margin-bottom: 1.3rem;
+    max-width: 62rem; line-height: 1.6;}}
+div[data-testid="stMarkdownContainer"] p.grafico-titulo, .grafico-titulo {{font-size: 1.12rem; font-weight: 750;
+    color: {S.TINTA}; margin: 1.6rem 0 .15rem 0;}}
+div[data-testid="stMarkdownContainer"] p.grafico-bajada, .grafico-bajada {{font-size: .93rem; color: {S.TINTA_2};
+    margin: 0 0 .4rem 0;}}
+.hero {{position: relative; border-radius: 22px; padding: 2.4rem 2.4rem 1.6rem 2.4rem; margin-bottom: .6rem;
+    background: radial-gradient(1200px 400px at 85% -10%, rgba(165,148,255,.28), transparent 60%),
+                radial-gradient(800px 300px at -10% 110%, rgba(255,200,87,.16), transparent 60%), {S.PANEL};
+    border: 1px solid {S.GRILLA};}}
+.hero .kicker {{margin-bottom: .6rem;}}
+.hero h1 {{font-size: 3.1rem; line-height: 1.06; font-weight: 850; letter-spacing: -.02em; color: {S.TINTA}; margin: 0 0 1rem 0;
+    padding: 0;}}
+.hero h1 span {{background: linear-gradient(90deg, {S.MODELO}, {S.DORADO}); -webkit-background-clip: text;
+    background-clip: text; color: transparent;}}
+.hero p {{font-size: 1.15rem; color: {S.TINTA_2}; max-width: 54rem; line-height: 1.6; margin: 0;}}
+.hero b {{color: {S.TINTA};}}
+.pase {{border: 1px solid {S.GRILLA}; border-left: 4px solid {S.DORADO}; background: {S.PANEL}; padding: 1rem 1.2rem;
+    border-radius: 0 14px 14px 0; margin: 2rem 0 .6rem 0; color: {S.TINTA}; font-size: 1.06rem;}}
+.pase b {{color: {S.DORADO};}}
+.tarjetas {{display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 1.2rem 0 .4rem 0;}}
+.tarjeta {{background: {S.PANEL}; border: 1px solid {S.GRILLA}; border-radius: 16px; padding: 1.15rem 1.25rem;}}
+.tarjeta .rotulo {{font-size: .82rem; color: {S.TINTA_SUAVE}; text-transform: uppercase; letter-spacing: .1em; font-weight: 600;}}
+.tarjeta .valor {{font-size: 2.6rem; font-weight: 850; color: {S.TINTA}; line-height: 1.1; margin: .25rem 0 .35rem 0;
+    letter-spacing: -.02em;}}
+.tarjeta .valor.modelo {{color: {S.MODELO}; text-shadow: 0 0 28px rgba(165,148,255,.45);}}
+.tarjeta .valor.texto {{font-size: 2.1rem;}}
+.tarjeta .valor.oro {{color: {S.DORADO}; text-shadow: 0 0 28px rgba(255,200,87,.35);}}
+.tarjeta .nota {{font-size: .9rem; color: {S.TINTA_2}; line-height: 1.5;}}
+.flujo {{display: flex; gap: .45rem; align-items: stretch; margin: .7rem 0 .2rem 0;}}
+.paso {{flex: 1 1 0; min-width: 0; background: {S.PANEL}; border: 1px solid {S.GRILLA}; border-radius: 12px; padding: .8rem .9rem;}}
+.paso .n {{font-size: .72rem; font-weight: 750; color: {S.DORADO}; letter-spacing: .12em;}}
+.paso .t {{font-weight: 750; color: {S.TINTA}; font-size: 1rem; margin: .1rem 0;}}
+.paso .d {{font-size: .85rem; color: {S.TINTA_2}; line-height: 1.45;}}
 .flecha {{align-self: center; color: {S.TINTA_SUAVE}; font-size: 1.3rem;}}
-.capitulos {{display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .7rem; margin: .4rem 0 0 0;}}
-.capitulo {{border-top: 3px solid {S.GRILLA}; padding-top: .5rem;}}
-.capitulo a {{text-decoration: none; color: {S.TINTA}; font-weight: 700;}}
-.capitulo .q {{font-size: .88rem; color: {S.TINTA_2};}}
-@media (max-width: 760px) {{ .tarjetas, .capitulos {{grid-template-columns: 1fr;}} div[data-testid="stMarkdownContainer"] p.titulo-seccion {{font-size: 1.5rem !important;}} .flujo {{flex-direction: column;}} .flecha {{display: none;}} }}
+.capitulos {{display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin: .5rem 0 0 0;}}
+.capitulo {{background: {S.PANEL}; border: 1px solid {S.GRILLA}; border-radius: 12px; padding: .8rem .9rem;}}
+.capitulo a {{text-decoration: none; color: {S.TINTA}; font-weight: 750;}}
+.capitulo .num {{font-size: 1.6rem; font-weight: 850; color: {S.MODELO}; line-height: 1;}}
+.capitulo .q {{font-size: .88rem; color: {S.TINTA_2}; margin-top: .25rem;}}
+div[data-testid="stExpander"] details {{background: {S.PANEL}; border-color: {S.GRILLA};}}
+@media (max-width: 760px) {{
+  .tarjetas, .capitulos {{grid-template-columns: 1fr;}} .flujo {{flex-direction: column;}} .flecha {{display: none;}}
+  .hero {{padding: 1.4rem;}} .hero h1 {{font-size: 2rem;}}
+  div[data-testid="stMarkdownContainer"] p.titulo-seccion {{font-size: 1.55rem;}}
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -183,14 +209,14 @@ def origen(col: str) -> str:
 
 
 ESCALA_ORIGEN = alt.Scale(domain=["Originales", "Combinadas (1ª ronda)", "Nuevas de TMDb (2ª ronda)"],
-                          range=[S.REAL, "#b3b1a8", S.MODELO])
+                          range=[S.GRIS_3, S.GRIS_1, S.MODELO])
 
 # Resultados de una película, de peor a mejor (ordinal): gris = perdió plata, verdes = cuánto multiplicó
 TRAMOS = list(E.TRAMOS_ROI[1])
 TRAMOS_ES = {"Pérdida (ROI<0)": "Perdió plata", "Recupera hasta 2x": "Recuperó hasta ×2", "2x a 4x": "×2 a ×4",
              "4x a 11x": "×4 a ×11", "Más de 11x": "Más de ×11"}
 ESCALA_RESULTADO = alt.Scale(domain=[TRAMOS_ES[t] for t in TRAMOS],
-                             range=["#8c8a83", "#d5e8da", "#9ccaa9", "#4f9a70", "#1d5e40"])
+                             range=["#6b6878", "#24493b", "#2f7a57", "#47b47d", "#82f2ad"])
 
 # Números que se repiten
 embudo = pd.DataFrame(M["embudo"])
@@ -216,15 +242,58 @@ with st.sidebar:
 # =============================================================================================
 # PORTADA
 # =============================================================================================
-st.markdown("<div id='portada'></div><p class='kicker'>Peliculón · Proyecto integrador de Ciencia de Datos</p>",
-            unsafe_allow_html=True)
-st.markdown("<p class='titulo-seccion' style='font-size:2.6rem'>¿Se puede saber, antes del estreno, cuántas veces "
-            "va a recuperar una película lo que costó?</p>", unsafe_allow_html=True)
-st.markdown(
-    f"<p class='bajada'>Con lo que se sabe antes del estreno, nuestro modelo lo anticipa con un error típico de "
-    f"<b>{S.mult(FIN['factor_test'])}</b>: se equivoca un <b>{S.pct(FIN['mejora_test_pct'], 1)} menos</b> que adivinar "
-    f"siempre lo más común. No sirve para dar una cifra exacta, pero sí para separar un proyecto riesgoso de uno "
-    f"seguro. Y lo que más pesa, por lejos, es el presupuesto.</p>", unsafe_allow_html=True)
+st.markdown(f"""
+<div id='portada'></div>
+<div class='hero'>
+  <p class='kicker'>Peliculón · Proyecto integrador de Ciencia de Datos · UTN FRM 2026</p>
+  <h1>¿Se puede saber, antes del estreno, <span>cuántas veces va a recuperar</span> una película lo que costó?</h1>
+  <p>Juntamos {S.num(n_alcance)} películas de TMDb y entrenamos un modelo con lo que se sabe antes del estreno. Se equivoca
+  un <b>{S.pct(FIN['mejora_test_pct'], 1)} menos</b> que adivinar: no da la cifra exacta, pero separa un proyecto riesgoso
+  de uno seguro. Y lo que más pesa, por lejos, es el <b>presupuesto</b>.</p>
+</div>
+""", unsafe_allow_html=True)
+
+# Galaxia: todas las películas del alcance, con las famosas marcadas.
+P["resultado"] = P["tramo_roi"].map(TRAMOS_ES)
+FAMOSAS = ["Paranormal Activity", "The Blair Witch Project", "Rocky", "Star Wars", "Titanic", "Get Out", "Cats",
+           "The Irishman", "Halloween"]
+fam = P[P["title"].isin(FAMOSAS)].drop_duplicates("title").copy()
+fam["etiqueta"] = fam["title"] + "  " + fam["multiplo_real"].map(lambda v: S.mult(v, 2 if v < 1 else (1 if v < 100 else 0)))
+fam["lado"] = np.where(fam["budget"] < 3e7, "izq", "der")
+fam.loc[fam["title"] == "Get Out", "lado"] = "der"  # para no pisar a Star Wars
+titulo_grafico(f"Las {S.num(n_alcance)} películas, de un vistazo",
+               "Cada punto es una película: a la derecha, más cara; arriba, más veces recuperó lo que costó (las dos "
+               "escalas son logarítmicas). Debajo de la línea punteada perdieron plata. Tocá un color de la leyenda para "
+               "resaltarlo.")
+# Gráfico: la galaxia de películas.
+#  datos: predicciones.parquet (las 6.391 del alcance) + las famosas (subconjunto)
+#  mapeo: x = presupuesto (LOG), y = múltiplo real (LOG), color = resultado (ordinal: de perder plata a más de ×11)
+#  marcas: círculos chicos semitransparentes; anillo y texto dorados para las famosas; regla punteada en ×1
+#  interacción: clic en la leyenda resalta un resultado (selección ligada a la leyenda, cambia la opacidad)
+sel_res = alt.selection_point(fields=["resultado"], bind="legend")
+x_gal = alt.X("budget:Q", scale=S.escala_budget_log(), axis=S.eje_budget())
+y_gal = alt.Y("multiplo_real:Q", scale=S.escala_multiplo_log(),
+              axis=S.eje_multiplo("Cuántas veces recuperó lo que costó (log)"))
+galaxia = alt.Chart(P).mark_circle(size=16).encode(
+    x=x_gal, y=y_gal,
+    color=alt.Color("resultado:N", scale=ESCALA_RESULTADO, sort=[TRAMOS_ES[t] for t in TRAMOS],
+                    legend=alt.Legend(title=None, orient="top", symbolSize=140, labelFontSize=12.5)),
+    opacity=alt.condition(sel_res, alt.value(0.75), alt.value(0.06)),
+    tooltip=[alt.Tooltip("title:N", title="Película"), alt.Tooltip("release_year:Q", title="Año"),
+             alt.Tooltip("presupuesto_txt:N", title="Costó"), alt.Tooltip("recaudacion_txt:N", title="Recaudó"),
+             alt.Tooltip("multiplo_real_txt:N", title="Recuperó")]).add_params(sel_res)
+anillos = alt.Chart(fam).mark_point(size=150, color=S.DORADO, strokeWidth=2, filled=False).encode(x=x_gal, y=y_gal)
+textos_fam = [alt.Chart(fam[fam["lado"] == lado]).mark_text(
+    align="left" if lado == "izq" else "right", dx=10 if lado == "izq" else -10, fontSize=12, fontWeight=600,
+    color=S.DORADO).encode(x=x_gal, y=y_gal, text="etiqueta:N") for lado in ("izq", "der")]
+uno = alt.Chart(pd.DataFrame({"y": [1], "x": [1.2e4], "t": ["×1: recupera justo lo que costó"]}))
+mostrar(alt.layer(galaxia, uno.mark_rule(strokeDash=[5, 4], color=S.TINTA_SUAVE).encode(y=alt.Y("y:Q", scale=S.escala_multiplo_log())),
+                  uno.mark_text(align="left", dy=-8, color=S.TINTA_SUAVE, fontSize=11.5).encode(
+                      x=alt.X("x:Q", scale=S.escala_budget_log()), y=alt.Y("y:Q", scale=S.escala_multiplo_log()), text="t:N"),
+                  anillos, *textos_fam), alto=560)
+st.markdown(f"Arriba a la izquierda están los milagros de bajo presupuesto: *Paranormal Activity* costó 15 mil dólares y "
+            f"recaudó casi 13 mil veces eso. Abajo a la derecha, los golpes caros: *The Irishman* figura con una recaudación "
+            f"simbólica porque se estrenó en Netflix. La nube del medio es la mayoría: películas que recuperan entre ×1 y ×10.")
 
 # Ejemplos: tres destinos (una que perdió, una típica, un fenómeno). Si el dataset cambia y no están,
 # se eligen solas entre las más votadas.
@@ -245,8 +314,8 @@ ej["destino"] = [f"{S.mult(m, 2)}: perdió el {S.pct(1 - m)} de lo invertido" if
                  f"{S.mult(m, 1)}: recuperó {S.num(m, 1)} veces lo que costó" for m in ej["multiplo_real"]]
 ej["costo_txt"], ej["recaudo_txt"] = ej["budget"].map(S.usd), ej["revenue"].map(S.usd)
 
-titulo_grafico("Qué medimos: cuántas veces vuelve lo que se puso",
-               "El punto hueco es lo que costó; el lleno, lo que recaudó en cines. La distancia entre los dos es el "
+titulo_grafico("Cómo se lee: cuántas veces vuelve lo que se puso",
+               "El punto hueco es lo que costó; el dorado, lo que recaudó en cines. La distancia entre los dos es el "
                "<b>múltiplo</b> (recaudación ÷ presupuesto), lo que el modelo intenta anticipar.")
 # Gráfico: tres películas, tres destinos.
 #  datos: tres filas de predicciones.parquet (presupuesto y recaudación reales)
@@ -263,7 +332,7 @@ g_ej = alt.layer(
                                                          x2="revenue:Q", y=y_ej, tooltip=tip_ej),
     base_ej.mark_point(size=260, filled=True, fill=S.SUPERFICIE, stroke=S.TINTA_2, strokeWidth=2.5).encode(
         x=alt.X("budget:Q", scale=esc_usd), y=y_ej, tooltip=tip_ej),
-    base_ej.mark_circle(size=260, color=S.TINTA, opacity=1).encode(
+    base_ej.mark_circle(size=260, color=S.DORADO, opacity=1).encode(
         x=alt.X("revenue:Q", scale=esc_usd), y=y_ej, tooltip=tip_ej),
     base_ej.mark_text(align="left", dx=16, fontSize=13, fontWeight="bold", color=S.TINTA).encode(
         x=alt.X("max_v:Q", scale=esc_usd), y=y_ej, text="destino:N"),
@@ -276,10 +345,10 @@ st.markdown(f"""
     <div class='nota'>Arriba o abajo de lo real, en {S.num(M['particion']['n_test'])} películas de {anios_test[0]}–{anios_test[1]}
     que el modelo nunca vio. Si una recuperó ×2, suele decir algo entre {S.mult(2 / FIN['factor_test'], 1)} y
     {S.mult(2 * FIN['factor_test'], 1)}.</div></div>
-  <div class='tarjeta'><div class='rotulo'>Menos error que adivinar</div><div class='valor'>{S.pct(FIN['mejora_test_pct'], 1)}</div>
+  <div class='tarjeta'><div class='rotulo'>Menos error que adivinar</div><div class='valor oro'>{S.pct(FIN['mejora_test_pct'], 1)}</div>
     <div class='nota'>Adivinar siempre lo más común se equivoca {S.mult(FIN['factor_piso_test'])}. En la Entrega 3,
     el modelo mejoraba un {S.pct(E3['mejora_test_pct'], 0)}.</div></div>
-  <div class='tarjeta'><div class='rotulo'>Lo que más pesa</div><div class='valor'>Presupuesto</div>
+  <div class='tarjeta'><div class='rotulo'>Lo que más pesa</div><div class='valor texto'>Presupuesto</div>
     <div class='nota'>Pesa {S.num(peso_budget, 1)} veces más que la segunda columna más importante del modelo.</div></div>
 </div>
 """, unsafe_allow_html=True)
@@ -307,10 +376,10 @@ st.markdown(f"""
 titulo_grafico("El recorrido")
 st.markdown("""
 <div class='capitulos'>
-  <div class='capitulo'><a href='#datos'>1 · Los datos</a><div class='q'>¿De dónde salen las películas y cuántas sirven?</div></div>
-  <div class='capitulo'><a href='#hallazgo'>2 · Lo que encontramos</a><div class='q'>¿Les va mejor a las caras o a las baratas?</div></div>
-  <div class='capitulo'><a href='#modelo'>3 · El modelo</a><div class='q'>¿Se puede anticipar? ¿Dónde acierta y dónde falla?</div></div>
-  <div class='capitulo'><a href='#mejora'>4 · Cómo lo mejoramos</a><div class='q'>¿Qué cambió desde la Entrega 3?</div></div>
+  <div class='capitulo'><div class='num'>1</div><a href='#datos'>Los datos</a><div class='q'>¿De dónde salen las películas y cuántas sirven?</div></div>
+  <div class='capitulo'><div class='num'>2</div><a href='#hallazgo'>Lo que encontramos</a><div class='q'>¿Les va mejor a las caras o a las baratas?</div></div>
+  <div class='capitulo'><div class='num'>3</div><a href='#modelo'>El modelo</a><div class='q'>¿Se puede anticipar? ¿Dónde acierta y dónde falla?</div></div>
+  <div class='capitulo'><div class='num'>4</div><a href='#mejora'>Cómo lo mejoramos</a><div class='q'>¿Qué cambió desde la Entrega 3?</div></div>
 </div>
 """, unsafe_allow_html=True)
 st.caption("Al final, en «Explorá y probá», podés recorrer todas las películas y cargar una inventada.")
@@ -364,16 +433,16 @@ titulo_grafico("El embudo: de lo que pedimos a lo que usamos",
 y_paso = alt.Y("paso:N", sort=orden_pasos, title=None, axis=alt.Axis(labelFontSize=13, labelLimit=280, ticks=False,
                                                                      domain=False))
 x_emb = alt.Scale(domain=[-n_pedidas / 2 - 200, n_pedidas / 2 + 5200], nice=False)
-barras_emb = alt.Chart(emb.iloc[1:]).mark_bar(color=S.REAL, height=30, cornerRadius=3).encode(
+barras_emb = alt.Chart(emb.iloc[1:]).mark_bar(color=S.GRIS_3, height=30, cornerRadius=3).encode(
     x=alt.X("x:Q", scale=x_emb, axis=None), x2="x2:Q", y=y_paso,
     tooltip=[alt.Tooltip("paso:N", title="Paso"), alt.Tooltip("filas:Q", title="Quedan", format=","),
              alt.Tooltip("sale:Q", title="Saca este paso", format=","), alt.Tooltip("motivo:N", title="Por qué")])
 barras_pedidas = alt.Chart(segs).mark_bar(height=30, stroke=S.SUPERFICIE, strokeWidth=2).encode(
     x=alt.X("x:Q", scale=x_emb), x2="x2:Q", y=y_paso,
-    color=alt.Color("lista:N", scale=alt.Scale(domain=list(pedidas["lista"]), range=["#3d3c39", "#77756f", "#a9a79e"]),
+    color=alt.Color("lista:N", scale=alt.Scale(domain=list(pedidas["lista"]), range=[S.GRIS_3, S.GRIS_2, S.GRIS_1]),
                     legend=None),
     tooltip=[alt.Tooltip("t:N", title="Lista")])
-texto_listas = alt.Chart(segs).mark_text(color="white", fontSize=11.5, fontWeight="bold").encode(
+texto_listas = alt.Chart(segs).mark_text(color=S.SUPERFICIE, fontSize=10.5, fontWeight="bold").encode(
     x=alt.X("medio:Q", scale=x_emb), y=y_paso, text="t:N").transform_calculate(medio="(datum.x + datum.x2) / 2")
 texto_emb = alt.Chart(emb).mark_text(align="left", dx=10, fontSize=13, color=S.TINTA).encode(
     x=alt.X("x2:Q", scale=x_emb), y=y_paso, text="quedan_txt:N")
@@ -395,8 +464,8 @@ titulo_grafico("De qué época son",
 # Gráfico: películas por año de estreno.
 #  datos: predicciones.parquet agrupado por año y conjunto (entrenamiento / test) con pandas
 #  marca: barra apilada por año; mapeo: x = año (temporal discreto), y = cantidad, color = conjunto
-#  escala de color: gris claro = para aprender, tinta = examen final (el modelo nunca lo ve)
-escala_conj = alt.Scale(domain=list(anios["conjunto_es"].unique()), range=["#c9c7bd", S.TINTA])
+#  escala de color: gris = para aprender, dorado = examen final (el modelo nunca lo ve)
+escala_conj = alt.Scale(domain=list(anios["conjunto_es"].unique()), range=[S.GRIS_1, S.DORADO])
 mostrar(alt.Chart(anios).mark_bar(width=4).encode(
     x=alt.X("release_year:Q", title="Año de estreno", axis=alt.Axis(format="d", tickCount=12),
             scale=alt.Scale(domain=[1940, 2026], nice=False)),
@@ -465,7 +534,7 @@ esc["etiqueta"] = [f"recauda {S.usd_corto(r)} · gana {S.usd_corto(g)}" for r, g
                    zip(esc["revenue_mediana"], esc["ganancia_mediana"])]
 esc["costo_txt"], esc["recauda_txt"] = esc["budget_mediano"].map(S.usd), esc["revenue_mediana"].map(S.usd)
 titulo_grafico("En dólares: las caras ganan más",
-               "Película típica (mediana) de cada tramo de presupuesto: hueco = lo que cuesta, lleno = lo que recauda.")
+               "Película típica (mediana) de cada tramo de presupuesto: hueco = lo que cuesta, dorado = lo que recauda.")
 # Gráfico: de lo que cuesta a lo que recauda, por tramo de presupuesto.
 #  datos: metricas.json["hallazgo_presupuesto"] (build_app agrupa las 6.391 películas en 4 tramos y calcula la
 #         mediana del presupuesto, de la recaudación y de la ganancia con pandas)
@@ -483,11 +552,45 @@ mostrar(alt.layer(
                                                     x2="revenue_mediana:Q", y=y_esc, tooltip=tip_esc),
     be.mark_point(size=230, filled=True, fill=S.SUPERFICIE, stroke=S.TINTA_2, strokeWidth=2.5).encode(
         x=alt.X("budget_mediano:Q", scale=x_esc), y=y_esc, tooltip=tip_esc),
-    be.mark_circle(size=230, color=S.TINTA, opacity=1).encode(
+    be.mark_circle(size=230, color=S.DORADO, opacity=1).encode(
         x=alt.X("revenue_mediana:Q", scale=x_esc), y=y_esc, tooltip=tip_esc),
     be.mark_text(align="left", dx=14, fontSize=12, color=S.TINTA).encode(
         x=alt.X("revenue_mediana:Q", scale=x_esc), y=y_esc, text="etiqueta:N"),
 ), alto=240)
+
+rng = np.random.default_rng(42)
+strip = P[["title", "release_year", "escala", "multiplo_real", "multiplo_real_txt", "presupuesto_txt", "resultado"]].copy()
+strip["jit"] = rng.uniform(-0.38, 0.38, len(strip))  # dispersión vertical fija (semilla), solo para que no se pisen
+strip["nombre"] = strip["escala"].map(dict(zip(esc["escala"], esc["nombre"])))
+med = esc.assign(t=esc["multiplo_mediano"].map(lambda v: f"típica {S.mult(v, 1)}"))
+fam_s = strip[strip["title"].isin(["Paranormal Activity", "Rocky", "Star Wars", "Titanic", "Gattaca",
+                                   "The Irishman"])].drop_duplicates("title")
+titulo_grafico("La lotería, película por película",
+               "Cada punto es una película, en su tramo de presupuesto; el trazo dorado marca la típica. Cuanto más barata, "
+               "más se desparrama: hay milagros y desastres. Las caras se amontonan cerca de ×1 a ×10.")
+# Gráfico: dispersión del múltiplo dentro de cada tramo de presupuesto (strip plot con jitter).
+#  datos: predicciones.parquet (las 6.391); jitter vertical fijo con semilla (numpy), solo para separar los puntos
+#  mapeo: y = tramo (ordinal) + yOffset = jitter, x = múltiplo real (LOG), color = resultado (misma escala que la portada)
+#  marcas: círculos chicos; tick dorado = mediana del tramo; texto = la típica; anillos dorados = famosas
+y_st = alt.Y("nombre:N", sort=list(esc["nombre"]), title=None, axis=alt.Axis(labelFontSize=12.5, labelLimit=200))
+x_st = alt.Scale(type="log", domain=[0.0005, 20000], nice=False, clamp=True)
+mostrar(alt.layer(
+    alt.Chart(strip).mark_circle(size=11, opacity=0.6).encode(
+        x=alt.X("multiplo_real:Q", scale=x_st, axis=S.eje_multiplo("Cuántas veces recuperó lo que costó (log)")),
+        y=y_st, yOffset=alt.YOffset("jit:Q", scale=alt.Scale(domain=[-0.5, 0.5])),
+        color=alt.Color("resultado:N", scale=ESCALA_RESULTADO, legend=None),
+        tooltip=[alt.Tooltip("title:N", title="Película"), alt.Tooltip("release_year:Q", title="Año"),
+                 alt.Tooltip("presupuesto_txt:N", title="Costó"), alt.Tooltip("multiplo_real_txt:N", title="Recuperó")]),
+    alt.Chart(pd.DataFrame({"x": [1]})).mark_rule(strokeDash=[5, 4], color=S.TINTA_SUAVE).encode(x=alt.X("x:Q", scale=x_st)),
+    alt.Chart(med).mark_tick(color=S.DORADO, thickness=4, size=96).encode(x=alt.X("multiplo_mediano:Q", scale=x_st), y=y_st),
+    alt.Chart(med).mark_text(align="center", dy=-62, fontSize=13, fontWeight=700, color=S.DORADO).encode(
+        x=alt.X("multiplo_mediano:Q", scale=x_st), y=y_st, text="t:N"),
+    alt.Chart(fam_s).mark_point(size=110, color=S.DORADO, strokeWidth=1.8).encode(
+        x=alt.X("multiplo_real:Q", scale=x_st), y=y_st, yOffset=alt.YOffset("jit:Q", scale=alt.Scale(domain=[-0.5, 0.5]))),
+    alt.Chart(fam_s).mark_text(align="left", dx=8, fontSize=11.5, fontWeight=600, color=S.DORADO).encode(
+        x=alt.X("multiplo_real:Q", scale=x_st), y=y_st, yOffset=alt.YOffset("jit:Q", scale=alt.Scale(domain=[-0.5, 0.5])),
+        text="title:N"),
+), alto=600)
 
 dist = (P.groupby(["escala", "tramo_roi"]).size().reset_index(name="n"))
 dist["tot"] = dist.groupby("escala")["n"].transform("sum")
@@ -498,7 +601,7 @@ dist["pct_txt"] = dist["pct"].map(S.pct)
 dist["nombre"] = dist["escala"].map(dict(zip(esc["escala"], esc["nombre"])))
 tipica = esc.assign(t=esc["multiplo_mediano"].map(lambda v: f"típica {S.mult(v, 1)}"))
 titulo_grafico("En múltiplo: las baratas multiplican más",
-               "Qué le pasó a cada película del tramo, de perder plata (gris) a multiplicar más de 11 veces (verde oscuro).")
+               "Qué le pasó a cada película del tramo, de perder plata (gris) a multiplicar más de 11 veces (verde brillante).")
 # Gráfico: resultado de las películas de cada tramo (partes de un todo).
 #  datos: predicciones.parquet; pandas cuenta las películas por tramo de presupuesto y tramo de resultado
 #  transformación: porcentaje dentro de cada tramo (suma 100%)
@@ -518,7 +621,7 @@ mostrar(alt.layer(
     bd.transform_filter(alt.datum.pct >= 0.09).mark_text(fontSize=11.5, fontWeight="bold").encode(
         x=alt.X("pct:Q", stack="normalize", bandPosition=0.5), y=y_d, order=alt.Order("orden_res:Q"),
         detail="resultado:N", text="pct_txt:N",
-        color=alt.condition(alt.datum.orden_res >= 3, alt.value("white"), alt.value(S.TINTA))),
+        color=alt.condition(alt.datum.orden_res >= 3, alt.value(S.SUPERFICIE), alt.value(S.TINTA))),
 ).resolve_scale(color="independent"), alto=260)
 
 st.markdown(
@@ -607,7 +710,7 @@ with c1:
         bdu.mark_bar(height=42, cornerRadiusEnd=5).encode(
             x2="uno:Q", x=alt.X("factor:Q", title="Error típico (×1 = acierta siempre)", scale=alt.Scale(domain=[1, 3.8]),
                     axis=alt.Axis(values=[1, 1.5, 2, 2.5, 3, 3.5], labelExpr=S.ETIQUETA_MULTIPLO)),
-            y=y_du, color=alt.Color("rol:N", scale=alt.Scale(domain=["Piso", "Modelo final"], range=["#c9c7bd", S.MODELO]),
+            y=y_du, color=alt.Color("rol:N", scale=alt.Scale(domain=["Piso", "Modelo final"], range=[S.GRIS_1, S.MODELO]),
                                     legend=None)),
         bdu.mark_text(align="left", dx=8, fontSize=16, fontWeight="bold", color=S.TINTA).encode(
             x="factor:Q", y=y_du, text="txt:N"),
@@ -635,7 +738,7 @@ with c2:
     #  mapeo: y = modelo (orden fijo, del más simple al final), x = factor (no arranca en ×1: se comparan diferencias
     #         chicas), color = rol (violeta = final, gris = piso, gris claro = otros)
     #  marcas: regla = ± un desvío entre cortes; punto = error medio; texto = factor
-    escala_rol = alt.Scale(domain=["Modelo final", "Piso", "Otros modelos"], range=[S.MODELO, "#a9a79e", "#6f6d66"])
+    escala_rol = alt.Scale(domain=["Modelo final", "Piso", "Otros modelos"], range=[S.MODELO, S.GRIS_1, S.GRIS_3])
     y_mod = alt.Y("nombre:N", sort=[nombres_cortos[m] for m in orden_modelos], title=None,
                   axis=alt.Axis(labelLimit=220, labelFontSize=12.5))
     x_mod = alt.Scale(domain=[2.05, 3.0], nice=False)
@@ -652,6 +755,50 @@ with c2:
     ), alto=270)
     st.markdown("Todos le ganan a adivinar, y entre ellos casi empatan. Elegimos el **promedio de los tres** porque "
                 "es el más estable y no depende de un solo modelo.")
+
+T = P[P["conjunto"] == "test"].copy()
+p_lo, p_hi = T["multiplo_pred"].quantile([0.01, 0.99])
+r_lo, r_hi = T["multiplo_real"].quantile([0.01, 0.99])
+titulo_grafico("Así achata el modelo",
+               f"Las {S.num(len(T))} películas del examen final. Si el modelo acertara siempre, todas caerían sobre la "
+               "diagonal; la franja violeta es su error típico. Lo real se reparte de "
+               f"{S.mult(r_lo, 2)} a {S.mult(r_hi, 0)}; lo que predice, de {S.mult(p_lo, 1)} a {S.mult(p_hi, 1)}: "
+               "los puntos quedan aplastados contra el medio.")
+# Gráfico: lo real contra lo predicho, película por película (test).
+#  datos: predicciones.parquet filtrado al test (1.278 películas que el modelo nunca vio)
+#  mapeo: x = múltiplo real (LOG), y = múltiplo predicho (LOG, mismo dominio que x), color = error del modelo
+#         (divergente: azul = predijo de menos, rojo = predijo de más, la misma escala de «Explorá»)
+#  marcas: círculos; regla diagonal = acierto perfecto; área violeta = ± el error típico; texto dorado = famosas
+dom_rp = [0.002, 2000]
+esc_rp = alt.Scale(type="log", domain=dom_rp, nice=False, clamp=True)
+xs = np.logspace(np.log10(dom_rp[0]), np.log10(dom_rp[1]), 60)
+franja = pd.DataFrame({"x": xs, "lo": xs / FIN["factor_test"], "hi": xs * FIN["factor_test"]})
+fam_t = T[T["title"].isin(["Get Out", "The Irishman", "Joker", "Cats", "Avengers: Endgame"])].drop_duplicates("title").copy()
+fam_t["etiqueta"] = fam_t["title"]
+ax_rp = dict(values=[0.01, 0.1, 1, 10, 100, 1000], labelExpr=S.ETIQUETA_MULTIPLO)
+mostrar(alt.layer(
+    alt.Chart(franja).mark_area(color=S.MODELO, opacity=0.16).encode(
+        x=alt.X("x:Q", scale=esc_rp, axis=alt.Axis(title="Lo que recuperó de verdad (log)", **ax_rp)),
+        y=alt.Y("lo:Q", scale=esc_rp, axis=alt.Axis(title="Lo que dijo el modelo (log)", **ax_rp)), y2="hi:Q"),
+    alt.Chart(franja).mark_line(color=S.MODELO, strokeDash=[6, 4], strokeWidth=1.5).encode(
+        x=alt.X("x:Q", scale=esc_rp), y=alt.Y("x:Q", scale=esc_rp)),
+    alt.Chart(T).mark_circle(size=26, opacity=0.8).encode(
+        x=alt.X("multiplo_real:Q", scale=esc_rp), y=alt.Y("multiplo_pred:Q", scale=esc_rp),
+        color=alt.Color("error_log:Q", scale=S.escala_error(), legend=None),
+        tooltip=[alt.Tooltip("title:N", title="Película"), alt.Tooltip("release_year:Q", title="Año"),
+                 alt.Tooltip("multiplo_real_txt:N", title="Recuperó"), alt.Tooltip("multiplo_pred_txt:N", title="Dijo el modelo"),
+                 alt.Tooltip("error_txt:N", title="Error")]),
+    alt.Chart(fam_t).mark_point(size=150, color=S.DORADO, strokeWidth=2).encode(
+        x=alt.X("multiplo_real:Q", scale=esc_rp), y=alt.Y("multiplo_pred:Q", scale=esc_rp)),
+    alt.Chart(fam_t).mark_text(align="left", dx=10, dy=-8, fontSize=12, fontWeight=600, color=S.DORADO).encode(
+        x=alt.X("multiplo_real:Q", scale=esc_rp), y=alt.Y("multiplo_pred:Q", scale=esc_rp), text="etiqueta:N"),
+    alt.Chart(pd.DataFrame({"x": [400], "y": [400 * 1.6], "t": ["acierto perfecto"]})).mark_text(
+        angle=360 - 37, fontSize=11.5, color=S.MODELO, align="right").encode(
+        x=alt.X("x:Q", scale=esc_rp), y=alt.Y("y:Q", scale=esc_rp), text="t:N"),
+), alto=520)
+st.markdown("A la izquierda, abajo de la diagonal quedarían los fracasos bien anticipados; están arriba: el modelo les "
+            "dice que van a ganar (*The Irishman*, *Cats*). A la derecha, los fenómenos quedan abajo: *Get Out* recuperó "
+            "×57 y el modelo le daba menos de ×4. Azul = predijo de menos; rojo = predijo de más.")
 
 tramos["real"] = tramos["roi_real_mediano"] + 1
 tramos["con"] = tramos["roi_pred_mediano"] + 1
@@ -863,7 +1010,7 @@ mostrar(alt.layer(
         x2="uno:Q", x=alt.X("factor:Q", scale=alt.Scale(domain=[1, 4.4]), title="Factor de error típico",
                 axis=alt.Axis(values=[1, 1.5, 2, 2.5, 3, 3.5], labelExpr=S.ETIQUETA_MULTIPLO)),
         y=y_rec, color=alt.Color("rol:N", scale=alt.Scale(domain=["Piso", "Antes", "Modelo final"],
-                                                          range=["#d7d5cc", "#a9a79e", S.MODELO]), legend=None)),
+                                                          range=[S.GRIS_1, S.GRIS_2, S.MODELO]), legend=None)),
     br.mark_text(align="left", dx=8, fontSize=12.5, fontWeight="bold", color=S.TINTA).encode(
         x="factor:Q", y=y_rec, text="txt:N"),
 ), alto=230)
@@ -896,7 +1043,7 @@ titulo_grafico("¿Se animó más en las puntas?",
 #  mapeo: y = tramo, x = múltiplo (escala LOG), color = real / sin / con
 #  marcas: regla de lo real a lo predicho con los datos nuevos (el error que queda) + puntos
 escala_ext = alt.Scale(domain=["Lo que pasó de verdad", "Sin los datos nuevos", "Con los datos nuevos (final)"],
-                       range=[S.REAL, "#b9b7ad", S.MODELO])
+                       range=[S.REAL, S.GRIS_1, S.MODELO])
 mostrar(alt.layer(
     alt.Chart(tramos).mark_rule(color=S.GRILLA, strokeWidth=3).encode(
         y=y_tr, x=alt.X("real:Q", scale=x_tr, axis=S.eje_multiplo("Cuántas veces recuperó lo que costó (escala log)")),
@@ -933,7 +1080,7 @@ titulo_grafico("Lo que pidió probar el profe para que no achate",
 #  marcas: barra (mejora media) + regla (± un desvío entre cortes) + regla vertical en 0
 #  mapeo: y = estrategia, x = mejora del MAE, color = resultado (mejora / empata / empeora / trampa)
 escala_res = alt.Scale(domain=["Mejora", "Empata (ruido)", "Empeora", "Mejora, pero es trampa"],
-                       range=[S.MODELO, "#b9b7ad", S.ERROR_MAS, "#e7e5df"])
+                       range=[S.MODELO, S.GRIS_2, S.ERROR_MAS, S.GRIS_1])
 y_pc = alt.Y("nombre:N", sort=list(pc["nombre"]), title=None, axis=alt.Axis(labelLimit=300, labelFontSize=12.5))
 mostrar(alt.layer(
     alt.Chart(pc).mark_bar(height=22, cornerRadius=3, stroke=S.TINTA_SUAVE, strokeWidth=0.6).encode(
@@ -1327,25 +1474,25 @@ with tab_proba:
         #  mapeo: x = presupuesto (log), y = múltiplo (log), las mismas escalas que «Explorá»
         #  marcas: círculos grises = múltiplo real de las películas; regla violeta = rango típico de error;
         #          rombo violeta = lo que predice el modelo para tu película
-        fondo = alt.Chart(P[["budget", "multiplo_real"]]).mark_circle(size=14, color=S.EJE, opacity=0.5).encode(
+        fondo = alt.Chart(P[["budget", "multiplo_real"]]).mark_circle(size=14, color=S.GRIS_1, opacity=0.45).encode(
             x=alt.X("budget:Q", scale=S.escala_budget_log(), axis=S.eje_budget()),
             y=alt.Y("multiplo_real:Q", scale=S.escala_multiplo_log(),
                     axis=S.eje_multiplo("Recaudación / presupuesto (log)")))
         tu = pd.DataFrame({"budget": [budget], "multiplo": [multiplo], "bajo": [bajo], "alto": [alto],
                            "t": [f"Tu película: {S.mult(multiplo)}"], "rango": [f"{S.mult(bajo)} a {S.mult(alto)}"]})
-        rango_tu = alt.Chart(tu).mark_rule(color=S.MODELO, strokeWidth=3).encode(
+        rango_tu = alt.Chart(tu).mark_rule(color=S.DORADO, strokeWidth=3).encode(
             x="budget:Q", y=alt.Y("bajo:Q", scale=S.escala_multiplo_log()), y2="alto:Q",
             tooltip=[alt.Tooltip("rango:N", title="Rango típico")])
-        rombo = alt.Chart(tu).mark_point(shape="diamond", filled=True, size=320, color=S.MODELO,
+        rombo = alt.Chart(tu).mark_point(shape="diamond", filled=True, size=380, color=S.DORADO,
                                          stroke=S.TINTA, strokeWidth=1.5).encode(
             x="budget:Q", y=alt.Y("multiplo:Q", scale=S.escala_multiplo_log()),
             tooltip=[alt.Tooltip("t:N", title=" "), alt.Tooltip("rango:N", title="Rango típico")])
-        texto_tu = alt.Chart(tu).mark_text(align="left", dx=14, fontSize=13, fontWeight="bold", color=S.MODELO).encode(
+        texto_tu = alt.Chart(tu).mark_text(align="left", dx=14, fontSize=14, fontWeight="bold", color=S.DORADO).encode(
             x="budget:Q", y=alt.Y("multiplo:Q", scale=S.escala_multiplo_log()), text="t:N")
         linea1 = alt.Chart(pd.DataFrame({"y": [1]})).mark_rule(strokeDash=[4, 4], color=S.PISO).encode(
             y=alt.Y("y:Q", scale=S.escala_multiplo_log()))
         mostrar(alt.layer(fondo, linea1, rango_tu, rombo, texto_tu), alto=420)
-        st.caption("Los puntos grises son lo que recuperaron de verdad las películas del dataset. El rombo violeta es "
+        st.caption("Los puntos grises son lo que recuperaron de verdad las películas del dataset. El rombo dorado es "
                    "lo que el modelo predice para la tuya; la línea, su rango típico de error.")
 
 st.divider()

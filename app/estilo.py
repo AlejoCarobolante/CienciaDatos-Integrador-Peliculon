@@ -14,24 +14,28 @@ from __future__ import annotations
 import altair as alt
 
 # --- Superficie y tintas ----------------------------------------------------------------------
-SUPERFICIE = "#fcfcfb"
-TINTA = "#0b0b0b"
-TINTA_2 = "#52514e"
-TINTA_SUAVE = "#898781"
-GRILLA = "#e1e0d9"
-EJE = "#c3c2b7"
-FUENTE = "system-ui, -apple-system, 'Segoe UI', sans-serif"
+# Tema oscuro de sala de cine: fondo casi negro, tinta clara, acento dorado para los casos famosos.
+SUPERFICIE = "#0f0e17"
+PANEL = "#1a1926"       # tarjetas y paneles
+TINTA = "#f4f2ec"
+TINTA_2 = "#c3bfb3"
+TINTA_SUAVE = "#8c8879"
+GRILLA = "#262433"
+EJE = "#4a4758"
+DORADO = "#ffc857"      # anotaciones: películas famosas, la película del usuario
+GRIS_1, GRIS_2, GRIS_3 = "#6e6b7b", "#8f8b9c", "#b6b2c2"  # secundarios (de oscuro a claro)
+FUENTE = "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif"
 
 # --- Roles del modelo -------------------------------------------------------------------------
-MODELO = "#6250d6"      # modelo final / predicho
-REAL = TINTA_2          # valor real
+MODELO = "#a594ff"      # modelo final / predicho
+REAL = "#e9e5d8"        # valor real
 PISO = TINTA_SUAVE      # piso: mediana
 OTROS_MODELOS = EJE     # Ridge, RF sin ajustar, HistGB
 
 # --- Error del modelo (divergente azul <-> rojo, gris al medio) ------------------------------
-ERROR_MENOS = "#2a78d6"  # predijo de menos: le fue mejor de lo anticipado
-ERROR_MAS = "#e34948"    # predijo de más: le fue peor de lo anticipado
-ERROR_CERO = "#c3c2b7"
+ERROR_MENOS = "#4ea8ff"  # predijo de menos: le fue mejor de lo anticipado
+ERROR_MAS = "#ff6b6b"    # predijo de más: le fue peor de lo anticipado
+ERROR_CERO = "#5a5768"
 
 # --- Géneros ----------------------------------------------------------------------------------
 GENERO_ES = {
@@ -44,9 +48,9 @@ GENERO_ES = {
 }
 # Tres géneros con color propio: tres regímenes de presupuesto distintos (Terror barato,
 # Drama medio, Acción caro). Amarillo, verde y magenta pasan el control entre todos los pares.
-GENERO_COLOR = {"Terror": "#eda100", "Drama": "#008300", "Acción": "#e87ba4"}
+GENERO_COLOR = {"Terror": "#ffb000", "Drama": "#3ddc84", "Acción": "#ff7eb6"}
 GENERO_OTROS = "Otros géneros"
-GENERO_OTROS_COLOR = "#c3c2b7"
+GENERO_OTROS_COLOR = "#55526a"
 
 IDIOMA_ES = {
     "en": "Inglés", "fr": "Francés", "hi": "Hindi", "ja": "Japonés", "zh": "Chino (mandarín)",
@@ -129,7 +133,8 @@ def configurar(chart: alt.TopLevelMixin, alto: int | None = None) -> alt.TopLeve
                                                   "regexp('\\\\.', 'g'), ','), regexp('#', 'g'), '.')")
             .configure_legend(labelColor=TINTA_2, titleColor=TINTA_2, labelFontSize=12, titleFontSize=12,
                               orient="top")
-            .configure_title(color=TINTA, fontSize=14, anchor="start"))
+            .configure_title(color=TINTA, fontSize=14, anchor="start")
+            .configure_text(font=FUENTE))
 
 
 # --- Formatos de texto (rioplatense) ----------------------------------------------------------

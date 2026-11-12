@@ -1,10 +1,10 @@
-# Tema claro fijo: los colores de app/estilo.py se validaron contra la superficie clara.
+# Tema oscuro fijo («sala de cine»): los colores de app/estilo.py están pensados para este fondo.
 [theme]
-base = "light"
-primaryColor = "#6250d6"
-backgroundColor = "#fcfcfb"
-secondaryBackgroundColor = "#f3f2ee"
-textColor = "#0b0b0b"
+base = "dark"
+primaryColor = "#a594ff"
+backgroundColor = "#0f0e17"
+secondaryBackgroundColor = "#1a1926"
+textColor = "#f4f2ec"
 
 [server]
 headless = true
