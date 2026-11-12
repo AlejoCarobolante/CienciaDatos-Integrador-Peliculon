@@ -161,15 +161,23 @@ def main() -> None:
     log("Pruebas por la corrección de la Entrega 3...")
     pruebas = E.pruebas_correccion(train, tss, grilla.best_params_)
 
+    log("Con y sin las columnas nuevas de TMDb...")
+    ctx = E.con_y_sin_contexto(train, test, tss, grilla.best_params_)
+    ctx["con"].pop("pred_test")                          # el completo es el modelo final (mismo MAE de test)
+    pred_sin_ctx = ctx["sin"].pop("pred_test")
+
     # 4. Lectura del modelo: tramos, errores, importancia, popularidades, ablación ---------------
     res = test[["movie_id", "title", "release_year", "budget", "revenue", "roi"]].copy()
     res["y_real"], res["y_pred"] = y_test.values, pred_test
     res["roi_pred"] = 10 ** res["y_pred"] - 1
     res["error_abs"] = (res["y_real"] - res["y_pred"]).abs()
     res["tramo"] = E.tramo_roi(res["roi"])
+    res["roi_pred_sin_ctx"] = 10 ** pred_sin_ctx - 1
+    res["error_abs_sin_ctx"] = (res["y_real"] - pred_sin_ctx).abs()
     por_tramo = res.groupby("tramo", observed=True).agg(
-        peliculas=("y_real", "size"), mae=("error_abs", "mean"),
+        peliculas=("y_real", "size"), mae=("error_abs", "mean"), mae_sin_ctx=("error_abs_sin_ctx", "mean"),
         roi_real_mediano=("roi", "median"), roi_pred_mediano=("roi_pred", "median"),
+        roi_pred_sin_ctx_mediano=("roi_pred_sin_ctx", "median"),
         sesgo=("y_pred", lambda s: (s - res.loc[s.index, "y_real"]).mean())).reset_index()
     cols_err = ["title", "release_year", "budget", "revenue", "roi", "roi_pred"]
     fracasos = res.assign(e=res["y_pred"] - res["y_real"]).nlargest(5, "e")[cols_err]
@@ -207,6 +215,8 @@ def main() -> None:
     pred = pd.concat([train.assign(conjunto="entrenamiento"), test.assign(conjunto="test")], ignore_index=True)
     pred["y_pred"] = modelo_final.predict(pred[E.FEATURES])
     pred.loc[pred["conjunto"] == "test", "y_pred"] = pred_test  # idénticas; se fija por las dudas
+    pred["y_pred_sin_ctx"] = np.nan                      # sin las columnas nuevas: solo en el test
+    pred.loc[pred["conjunto"] == "test", "y_pred_sin_ctx"] = pred_sin_ctx
     pred["multiplo_real"] = 10 ** pred["y"]
     pred["multiplo_pred"] = 10 ** pred["y_pred"]
     pred["roi_pred"] = pred["multiplo_pred"] - 1
@@ -218,7 +228,7 @@ def main() -> None:
                                                         "revenue", "vote_average", "vote_count"]
                 + [c for c in E.FEATURES if c not in E.COLS_BASE]
                 + ["roi", "y", "y_pred", "multiplo_real", "multiplo_pred", "roi_pred",
-                   "error_log", "error_abs", "factor_error", "tramo_roi", "conjunto"])
+                   "error_log", "error_abs", "factor_error", "tramo_roi", "conjunto", "y_pred_sin_ctx"])
     pred[columnas].to_parquet(SALIDA / "predicciones.parquet", index=False)
 
     # 6. Rangos y categorías vistas en entrenamiento ---------------------------------------------
@@ -248,6 +258,8 @@ def main() -> None:
                      labels=["Menos de 1 M", "1 a 10 M", "10 a 100 M", "Más de 100 M"], right=False)
     por_escala = (data.assign(multiplo=10 ** data["y"], escala=escalas).groupby("escala", observed=True)
                   .agg(peliculas=("y", "size"), multiplo_mediano=("multiplo", "median"),
+                       budget_mediano=("budget", "median"), revenue_mediana=("revenue", "median"),
+                       ganancia_mediana=("revenue", lambda s: float((s - data.loc[s.index, "budget"]).median())),
                        p25=("multiplo", lambda s: s.quantile(0.25)), p75=("multiplo", lambda s: s.quantile(0.75)),
                        pierde=("roi", lambda s: float((s < 0).mean()))).reset_index())
     por_escala["escala"] = por_escala["escala"].astype(str)
@@ -261,6 +273,10 @@ def main() -> None:
         "entorno": {"python": platform.python_version(), "scikit_learn": sklearn.__version__,
                     "pandas": pd.__version__, "seed": SEED},
         "embudo": pasos,
+        # Lo que pidió el DAG (discover_batches, modo full): 10.000 IDs únicos en tres listas
+        "pedidas": {"total": 10000, "listas": [{"lista": "Más populares", "peliculas": 4000},
+                                               {"lista": "Peor calificadas", "peliculas": 3000},
+                                               {"lista": "Mayor taquilla", "peliculas": 3000}]},
         "particion": {"n_alcance": int(len(data)), "n_train": int(len(train)), "n_test": int(len(test)),
                       "anios_train": [int(train["release_year"].min()), int(train["release_year"].max())],
                       "anios_test": [int(test["release_year"].min()), int(test["release_year"].max())],
@@ -298,6 +314,10 @@ def main() -> None:
         "popularidades": {"spearman_vote_count": spearman_pop.round(4).to_dict(),
                           "mae_test_con": float(mae_final), "mae_test_sin": float(mae_sin_pop)},
         "ablacion": ablacion,
+        "contexto": ctx,
+        # Lo que se presentó en la Entrega 3 (rama presentacion3, antes de las correcciones): MAE de test del
+        # Random Forest ajustado de ese notebook. Es un dato histórico, no se recalcula.
+        "entrega3_presentada": {"mae_test": 0.4585, "factor_test": 10 ** 0.4585, "mejora_test_pct": 0.070},
         "entrega2": A.fichas(df),
         "hallazgo_presupuesto": {"por_escala": por_escala.to_dict("records"),
                                  "spearman_logbudget_y": spearman_budget_y},

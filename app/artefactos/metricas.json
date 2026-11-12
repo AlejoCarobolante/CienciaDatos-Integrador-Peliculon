@@ -1,5 +1,5 @@
 {
- "generado": "2026-11-10",
+ "generado": "2026-11-12",
  "datos": {
   "csv": "include/frozen/ultimo_ok.csv",
   "fecha": "2026-10-24",
@@ -44,6 +44,23 @@
    "motivo": "Las de 2026 siguen en cartelera: su revenue está incompleto."
   }
  ],
+ "pedidas": {
+  "total": 10000,
+  "listas": [
+   {
+    "lista": "Más populares",
+    "peliculas": 4000
+   },
+   {
+    "lista": "Peor calificadas",
+    "peliculas": 3000
+   },
+   {
+    "lista": "Mayor taquilla",
+    "peliculas": 3000
+   }
+  ]
+ },
  "particion": {
   "n_alcance": 6391,
   "n_train": 5113,
@@ -121,8 +138,8 @@
    "desvio_mejora_vs_ridge": 0.03067464807406932,
    "folds_gana_vs_ridge": "0 de 5",
    "supera_ruido_vs_ridge": false,
-   "mejora_vs_rf": -0.0485335932666916,
-   "desvio_mejora_vs_rf": 0.03703322962563134,
+   "mejora_vs_rf": -0.048533593266691585,
+   "desvio_mejora_vs_rf": 0.037033229625631346,
    "folds_gana_vs_rf": "0 de 5",
    "supera_ruido_vs_rf": false
   },
@@ -139,8 +156,8 @@
    "desvio_mejora_vs_piso": 0.03067464807406932,
    "folds_gana_vs_piso": "5 de 5",
    "supera_ruido_vs_piso": true,
-   "mejora_vs_rf": -0.017345012704674135,
-   "desvio_mejora_vs_rf": 0.008486042468843939,
+   "mejora_vs_rf": -0.017345012704674125,
+   "desvio_mejora_vs_rf": 0.008486042468843937,
    "folds_gana_vs_rf": "0 de 5",
    "supera_ruido_vs_rf": false
   },
@@ -149,7 +166,7 @@
    "mae_cv": 0.37839211081993684,
    "desvio_cv": 0.02284401408913385,
    "factor_cv": 2.389968136104122,
-   "mae_kfold_azar": 0.36320562954268915,
+   "mae_kfold_azar": 0.36320562954268903,
    "mae_test": 0.44019957640040375,
    "r2_test": 0.15783711072188,
    "es_final": false,
@@ -161,8 +178,8 @@
    "desvio_mejora_vs_ridge": 0.007800324901326772,
    "folds_gana_vs_ridge": "5 de 5",
    "supera_ruido_vs_ridge": true,
-   "mejora_vs_rf": -0.0007268832460350927,
-   "desvio_mejora_vs_rf": 0.0018860578922442633,
+   "mejora_vs_rf": -0.0007268832460350816,
+   "desvio_mejora_vs_rf": 0.0018860578922442806,
    "folds_gana_vs_rf": "1 de 5",
    "supera_ruido_vs_rf": false
   },
@@ -183,26 +200,26 @@
    "desvio_mejora_vs_ridge": 0.006665705798935118,
    "folds_gana_vs_ridge": "5 de 5",
    "supera_ruido_vs_ridge": true,
-   "mejora_vs_rf": 0.0067774731143893764,
-   "desvio_mejora_vs_rf": 0.01050669899846943,
+   "mejora_vs_rf": 0.006777473114389388,
+   "desvio_mejora_vs_rf": 0.010506698998469432,
    "folds_gana_vs_rf": "3 de 5",
    "supera_ruido_vs_rf": false
   },
   {
    "modelo": "Random Forest ajustado",
    "mae_cv": 0.37766522757390175,
-   "desvio_cv": 0.022769480644928602,
+   "desvio_cv": 0.02276948064492859,
    "factor_cv": 2.3859713669266616,
    "mae_kfold_azar": null,
    "mae_test": 0.4401858876484238,
    "r2_test": 0.15439626075918034,
    "es_final": false,
-   "mejora_vs_piso": 0.0485335932666916,
-   "desvio_mejora_vs_piso": 0.03703322962563134,
+   "mejora_vs_piso": 0.048533593266691585,
+   "desvio_mejora_vs_piso": 0.037033229625631346,
    "folds_gana_vs_piso": "5 de 5",
    "supera_ruido_vs_piso": true,
-   "mejora_vs_ridge": 0.017345012704674135,
-   "desvio_mejora_vs_ridge": 0.008486042468843939,
+   "mejora_vs_ridge": 0.017345012704674125,
+   "desvio_mejora_vs_ridge": 0.008486042468843937,
    "folds_gana_vs_ridge": "5 de 5",
    "supera_ruido_vs_ridge": true
   },
@@ -223,8 +240,8 @@
    "desvio_mejora_vs_ridge": 0.004026138536940328,
    "folds_gana_vs_ridge": "5 de 5",
    "supera_ruido_vs_ridge": true,
-   "mejora_vs_rf": 0.005769101361499396,
-   "desvio_mejora_vs_rf": 0.005865799374505102,
+   "mejora_vs_rf": 0.005769101361499407,
+   "desvio_mejora_vs_rf": 0.005865799374505103,
    "folds_gana_vs_rf": "3 de 5",
    "supera_ruido_vs_rf": false
   }
@@ -343,7 +360,7 @@
   {
    "modelo": "Random Forest ajustado",
    "fold": 3,
-   "mae": 0.35567521662349383
+   "mae": 0.3556752166234939
   },
   {
    "modelo": "Random Forest ajustado",
@@ -383,15 +400,15 @@
  ],
  "histgb_vs_final": {
   "comparación": "HistGB (absolute_error) vs Random Forest ajustado",
-  "mejora media": 0.0067774731143893764,
-  "desvío de la mejora": 0.01050669899846943,
+  "mejora media": 0.006777473114389388,
+  "desvío de la mejora": 0.010506698998469432,
   "folds que gana": "3 de 5",
   "supera el ruido": 0.0
  },
  "final_vs_rf": {
   "comparación": "Promedio de 3 modelos vs Random Forest ajustado",
-  "mejora media": 0.005769101361499396,
-  "desvío de la mejora": 0.005865799374505102,
+  "mejora media": 0.005769101361499407,
+  "desvío de la mejora": 0.005865799374505103,
   "folds que gana": "3 de 5",
   "supera el ruido": 0.0
  },
@@ -410,8 +427,8 @@
    "prueba": "Promedio de 3 modelos (el final)",
    "mae_cv": 0.37189612621240237,
    "r2_cv": 0.10919109685486425,
-   "mejora": 0.005769101361499396,
-   "desvio_mejora": 0.005865799374505114,
+   "mejora": 0.005769101361499385,
+   "desvio_mejora": 0.005865799374505113,
    "cortes_gana": "3 de 5",
    "supera_ruido": false,
    "que_es": "Promedia Random Forest, HistGB y Ridge."
@@ -421,7 +438,7 @@
    "mae_cv": 0.37212457177906544,
    "r2_cv": 0.09166835677059573,
    "mejora": 0.005540655794836336,
-   "desvio_mejora": 0.00901799202873102,
+   "desvio_mejora": 0.009017992028731003,
    "cortes_gana": "3 de 5",
    "supera_ruido": false,
    "que_es": "Penaliza distinto los errores grandes, para no quedarse en la mediana."
@@ -429,9 +446,9 @@
   {
    "prueba": "Estirar las predicciones ×1,5",
    "mae_cv": 0.4067589822778178,
-   "r2_cv": 0.010097451570050774,
-   "mejora": -0.029093754703916008,
-   "desvio_mejora": 0.01147768839264472,
+   "r2_cv": 0.010097451570050731,
+   "mejora": -0.029093754703915987,
+   "desvio_mejora": 0.01147768839264473,
    "cortes_gana": "0 de 5",
    "supera_ruido": false,
    "que_es": "Aleja cada predicción de la mediana un 50%."
@@ -439,9 +456,9 @@
   {
    "prueba": "Más peso a los casos extremos",
    "mae_cv": 0.3962106673893377,
-   "r2_cv": 0.0682436079795192,
+   "r2_cv": 0.06824360797951923,
    "mejora": -0.01854543981543596,
-   "desvio_mejora": 0.008581785009796684,
+   "desvio_mejora": 0.008581785009796694,
    "cortes_gana": "0 de 5",
    "supera_ruido": false,
    "que_es": "Al entrenar, cada película pesa 1 + su distancia a la mediana."
@@ -449,9 +466,9 @@
   {
    "prueba": "+ «pertenece a una saga» (trampa)",
    "mae_cv": 0.36212300228539707,
-   "r2_cv": 0.14990392715950546,
+   "r2_cv": 0.14990392715950548,
    "mejora": 0.015542225288504652,
-   "desvio_mejora": 0.006466010277104941,
+   "desvio_mejora": 0.006466010277104946,
    "cortes_gana": "5 de 5",
    "supera_ruido": true,
    "que_es": "TMDb crea la saga cuando hay secuela, y eso pasa si a la primera le fue bien: se sabe después."
@@ -467,7 +484,7 @@
     "min_samples_leaf": 10,
     "max_features": 0.3,
     "mae": 0.37766522757390175,
-    "desvio": 0.022769480644928602
+    "desvio": 0.02276948064492859
    },
    {
     "min_samples_leaf": 5,
@@ -478,8 +495,8 @@
    {
     "min_samples_leaf": 1,
     "max_features": 0.3,
-    "mae": 0.37894523811828973,
-    "desvio": 0.023445733030675618
+    "mae": 0.3789452381182898,
+    "desvio": 0.023445733030675594
    },
    {
     "min_samples_leaf": 20,
@@ -509,19 +526,19 @@
     "min_samples_leaf": 40,
     "max_features": 0.3,
     "mae": 0.38064499923777373,
-    "desvio": 0.022021677610675125
+    "desvio": 0.02202167761067514
    },
    {
     "min_samples_leaf": 40,
     "max_features": 0.6,
     "mae": 0.3806990273710172,
-    "desvio": 0.02158681174185238
+    "desvio": 0.021586811741852396
    },
    {
     "min_samples_leaf": 40,
     "max_features": 1.0,
     "mae": 0.38146438002363636,
-    "desvio": 0.020416231385956152
+    "desvio": 0.020416231385956145
    },
    {
     "min_samples_leaf": 20,
@@ -532,14 +549,14 @@
    {
     "min_samples_leaf": 10,
     "max_features": 1.0,
-    "mae": 0.38293893817972197,
-    "desvio": 0.02217984414483645
+    "mae": 0.3829389381797219,
+    "desvio": 0.02217984414483646
    },
    {
     "min_samples_leaf": 5,
     "max_features": 1.0,
     "mae": 0.38319576826342916,
-    "desvio": 0.022339658328765093
+    "desvio": 0.0223396583287651
    },
    {
     "min_samples_leaf": 1,
@@ -550,8 +567,8 @@
    {
     "min_samples_leaf": 1,
     "max_features": 1.0,
-    "mae": 0.3858184120361341,
-    "desvio": 0.022745145602779064
+    "mae": 0.385818412036134,
+    "desvio": 0.022745145602779054
    }
   ]
  },
@@ -587,40 +604,50 @@
    "tramo": "Pérdida (ROI<0)",
    "peliculas": 347,
    "mae": 0.8349232245984999,
+   "mae_sin_ctx": 0.8761949733506971,
    "roi_real_mediano": -0.57739466,
    "roi_pred_mediano": 0.6455777590547795,
+   "roi_pred_sin_ctx_mediano": 0.7855296220907402,
    "sesgo": 0.8348168704216843
   },
   {
    "tramo": "Recupera hasta 2x",
    "peliculas": 252,
    "mae": 0.18628261078512648,
+   "mae_sin_ctx": 0.18895494788725467,
    "roi_real_mediano": 0.4114485662162162,
    "roi_pred_mediano": 0.9004319533755695,
+   "roi_pred_sin_ctx_mediano": 0.9505865677448457,
    "sesgo": 0.13708443387423297
   },
   {
    "tramo": "2x a 4x",
    "peliculas": 306,
    "mae": 0.15517270061028587,
+   "mae_sin_ctx": 0.14836892822331982,
    "roi_real_mediano": 1.7895734796296296,
    "roi_pred_mediano": 1.2031150212424653,
+   "roi_pred_sin_ctx_mediano": 1.1544929147579543,
    "sesgo": -0.10095791947455654
   },
   {
    "tramo": "4x a 11x",
    "peliculas": 282,
    "mae": 0.34458615902007533,
+   "mae_sin_ctx": 0.3790877773704517,
    "roi_real_mediano": 4.759183450429353,
    "roi_pred_mediano": 1.658134912060447,
+   "roi_pred_sin_ctx_mediano": 1.364264968526705,
    "sesgo": -0.3372283541424228
   },
   {
    "tramo": "Más de 11x",
    "peliculas": 91,
    "mae": 0.7030768629654051,
+   "mae_sin_ctx": 0.7390039217716184,
    "roi_real_mediano": 16.30134188888889,
    "roi_pred_mediano": 2.7061012515743106,
+   "roi_pred_sin_ctx_mediano": 2.4866682073014017,
    "sesgo": -0.6978543215063139
   }
  ],
@@ -712,37 +739,37 @@
   {
    "variable": "budget",
    "aumento_mae": 0.05757004603573677,
-   "desvio": 0.005190580463441879
+   "desvio": 0.0051905804634418745
   },
   {
    "variable": "power_pack",
-   "aumento_mae": 0.018105324245325707,
-   "desvio": 0.0030005783038901126
+   "aumento_mae": 0.018105324245325717,
+   "desvio": 0.003000578303890116
   },
   {
    "variable": "saga_hist",
    "aumento_mae": 0.01511845233178121,
-   "desvio": 0.0011193660578977527
+   "desvio": 0.0011193660578977572
   },
   {
    "variable": "original_language",
-   "aumento_mae": 0.007230565660416655,
-   "desvio": 0.0007778698477558109
+   "aumento_mae": 0.0072305656604166576,
+   "desvio": 0.0007778698477558175
   },
   {
    "variable": "runtime",
-   "aumento_mae": 0.006511531826533376,
-   "desvio": 0.0015732944494546222
+   "aumento_mae": 0.006511531826533387,
+   "desvio": 0.0015732944494546246
   },
   {
    "variable": "actor_hist",
-   "aumento_mae": 0.006305834222051945,
-   "desvio": 0.0012165942519944978
+   "aumento_mae": 0.006305834222051948,
+   "desvio": 0.0012165942519945028
   },
   {
    "variable": "paises_n",
-   "aumento_mae": 0.006284934068626957,
-   "desvio": 0.0009509018776845783
+   "aumento_mae": 0.006284934068626966,
+   "desvio": 0.000950901877684575
   },
   {
    "variable": "primary_genre",
@@ -761,13 +788,13 @@
   },
   {
    "variable": "secondary_genre",
-   "aumento_mae": 0.0034377156761819403,
-   "desvio": 0.0005426952444331602
+   "aumento_mae": 0.003437715676181949,
+   "desvio": 0.0005426952444331684
   },
   {
    "variable": "star_power_ratio",
    "aumento_mae": 0.0025088290818593485,
-   "desvio": 0.0006829879298911952
+   "desvio": 0.0006829879298911856
   },
   {
    "variable": "director_popularity",
@@ -776,33 +803,33 @@
   },
   {
    "variable": "budget_vs_genre_median",
-   "aumento_mae": 0.0019860749701340803,
-   "desvio": 0.0007371387494432552
+   "aumento_mae": 0.0019860749701340746,
+   "desvio": 0.0007371387494432534
   },
   {
    "variable": "primary_production_company",
    "aumento_mae": 0.0019583290943746084,
-   "desvio": 0.0010031555872276295
+   "desvio": 0.0010031555872276237
   },
   {
    "variable": "release_month",
    "aumento_mae": 0.0017565615655059097,
-   "desvio": 0.0004847272155981697
+   "desvio": 0.00048472721559818103
   },
   {
    "variable": "co_star_popularity",
-   "aumento_mae": 0.0016652220596258648,
-   "desvio": 0.0013057316074218187
+   "aumento_mae": 0.0016652220596258538,
+   "desvio": 0.0013057316074218221
   },
   {
    "variable": "kw_found_footage",
-   "aumento_mae": 0.0016596034189257174,
-   "desvio": 0.0002921932210382602
+   "aumento_mae": 0.001659603418925712,
+   "desvio": 0.00029219322103825595
   },
   {
    "variable": "director_hist",
-   "aumento_mae": 0.0015712693576325515,
-   "desvio": 0.0004657926596212067
+   "aumento_mae": 0.0015712693576325626,
+   "desvio": 0.00046579265962120187
   },
   {
    "variable": "release_day_of_week",
@@ -816,23 +843,23 @@
   },
   {
    "variable": "lead_actor_popularity",
-   "aumento_mae": 0.0009171523064087694,
-   "desvio": 0.0004919449530405037
+   "aumento_mae": 0.0009171523064087778,
+   "desvio": 0.000491944953040505
   },
   {
    "variable": "director_leverage",
-   "aumento_mae": 0.0007929181390000678,
-   "desvio": 0.00034167790536678575
+   "aumento_mae": 0.0007929181390000595,
+   "desvio": 0.0003416779053667904
   },
   {
    "variable": "director_n_prev",
-   "aumento_mae": 0.0006791845524301732,
-   "desvio": 0.0005973661052400967
+   "aumento_mae": 0.0006791845524301759,
+   "desvio": 0.0005973661052401042
   },
   {
    "variable": "co_production_company",
-   "aumento_mae": 0.0005983819560821613,
-   "desvio": 0.0003340124331231716
+   "aumento_mae": 0.0005983819560821558,
+   "desvio": 0.0003340124331231672
   },
   {
    "variable": "release_year",
@@ -841,13 +868,13 @@
   },
   {
    "variable": "kw_comic",
-   "aumento_mae": 0.0004162597619684433,
-   "desvio": 0.00014674151815276785
+   "aumento_mae": 0.0004162597619684405,
+   "desvio": 0.00014674151815275948
   },
   {
    "variable": "es_eeuu",
-   "aumento_mae": 0.00021665634635767984,
-   "desvio": 0.0003675859784160382
+   "aumento_mae": 0.0002166563463576826,
+   "desvio": 0.00036758597841603783
   },
   {
    "variable": "actor_n_prev",
@@ -856,33 +883,33 @@
   },
   {
    "variable": "kw_remake",
-   "aumento_mae": 8.393221574519994e-05,
-   "desvio": 3.8563076791151525e-05
+   "aumento_mae": 8.393221574521382e-05,
+   "desvio": 3.8563076791162184e-05
   },
   {
    "variable": "is_horror_low_budget",
-   "aumento_mae": 3.6058163775049e-05,
-   "desvio": 5.159641196374529e-05
+   "aumento_mae": 3.605816377505455e-05,
+   "desvio": 5.159641196374467e-05
   },
   {
    "variable": "kw_musical",
-   "aumento_mae": 1.5970279628219063e-05,
-   "desvio": 4.5624873823083535e-05
+   "aumento_mae": 1.5970279628216288e-05,
+   "desvio": 4.562487382308168e-05
   },
   {
    "variable": "kw_videojuego",
-   "aumento_mae": -9.46659913952097e-06,
-   "desvio": 4.779213075803006e-06
+   "aumento_mae": -9.466599139523746e-06,
+   "desvio": 4.779213075799062e-06
   },
   {
    "variable": "kw_navidad",
-   "aumento_mae": -3.926394793024312e-05,
-   "desvio": 1.625685519582611e-05
+   "aumento_mae": -3.926394793024035e-05,
+   "desvio": 1.6256855195822844e-05
   },
   {
    "variable": "kw_libro",
-   "aumento_mae": -8.510147922855815e-05,
-   "desvio": 0.00024867955501894267
+   "aumento_mae": -8.51014792285637e-05,
+   "desvio": 0.0002486795550189366
   },
   {
    "variable": "kw_historia_real",
@@ -891,8 +918,8 @@
   },
   {
    "variable": "es_secuela",
-   "aumento_mae": -0.0005307394799974968,
-   "desvio": 0.0002686655604355355
+   "aumento_mae": -0.0005307394799975107,
+   "desvio": 0.00026866556043552206
   }
  ],
  "popularidades": {
@@ -919,9 +946,9 @@
   },
   {
    "variante": "sin popularidades (director y elenco)",
-   "mae": 0.3778584790592553,
-   "desvio": 0.02221149656468521,
-   "cambio": 0.00019325148535354053
+   "mae": 0.37785847905925524,
+   "desvio": 0.022211496564685195,
+   "cambio": 0.00019325148535348502
   },
   {
    "variante": "sin productoras",
@@ -949,9 +976,9 @@
   },
   {
    "variante": "sin runtime",
-   "mae": 0.3792328540909041,
-   "desvio": 0.02342297606155443,
-   "cambio": 0.001567626517002374
+   "mae": 0.37923285409090407,
+   "desvio": 0.023422976061554412,
+   "cambio": 0.0015676265170023185
   },
   {
    "variante": "sin release_year",
@@ -966,6 +993,96 @@
    "cambio": 0.006521164770990073
   }
  ],
+ "contexto": {
+  "con": {
+   "mae_cv": 0.37189612621240237,
+   "r2_cv": 0.10919109685486425,
+   "folds_mae": [
+    0.3775555146808785,
+    0.3503893438214622,
+    0.34917452218212713,
+    0.39791865920834124,
+    0.3844425911692026
+   ],
+   "mae_test": 0.4266805278668168,
+   "r2_test": 0.18604966517534816
+  },
+  "sin": {
+   "mae_cv": 0.38109460392649447,
+   "r2_cv": 0.080739397113609,
+   "folds_mae": [
+    0.3818272796221174,
+    0.3560869895536701,
+    0.3555797228935285,
+    0.4094909329797056,
+    0.40248809458345086
+   ],
+   "mae_test": 0.4469556375244918,
+   "r2_test": 0.13072750548591394
+  },
+  "mejora_cv": {
+   "media": 0.009198477714092157,
+   "desvio": 0.005064296420749568,
+   "cortes_gana": "5 de 5",
+   "supera_ruido": true
+  },
+  "grupos": [
+   {
+    "grupo": "Historia de la saga y si es secuela",
+    "columnas": [
+     "saga_hist",
+     "es_secuela",
+     "kw_secuela"
+    ],
+    "aporte": 0.0036509470109374444,
+    "desvio": 0.0026706325706248374,
+    "cortes": "4 de 5"
+   },
+   {
+    "grupo": "Historia del director y del actor",
+    "columnas": [
+     "director_hist",
+     "director_n_prev",
+     "actor_hist",
+     "actor_n_prev"
+    ],
+    "aporte": 0.0005026218680894035,
+    "desvio": 0.0037180358052884463,
+    "cortes": "3 de 5"
+   },
+   {
+    "grupo": "De qué se trata (palabras clave)",
+    "columnas": [
+     "kw_remake",
+     "kw_libro",
+     "kw_comic",
+     "kw_historia_real",
+     "kw_videojuego",
+     "kw_navidad",
+     "kw_musical",
+     "kw_found_footage"
+    ],
+    "aporte": 0.0005344157080088396,
+    "desvio": 0.0010678445811344941,
+    "cortes": "4 de 5"
+   },
+   {
+    "grupo": "Países que la producen",
+    "columnas": [
+     "paises_n",
+     "es_eeuu"
+    ],
+    "aporte": 0.001565712395288743,
+    "desvio": 0.001331416483273987,
+    "cortes": "4 de 5"
+   }
+  ]
+ },
+ "entrega3_presentada": {
+  "mae_test": 0.4585,
+  "factor_test": 2.874087593615022,
+  "mejora_test_pct": 0.07
+ },
  "entrega2": {
   "universo": {
    "con_montos": 6528,
@@ -1065,6 +1182,9 @@
     "escala": "Menos de 1 M",
     "peliculas": 148,
     "multiplo_mediano": 18.042812124999998,
+    "budget_mediano": 352500.0,
+    "revenue_mediana": 4734298.5,
+    "ganancia_mediana": 4546798.5,
     "p25": 2.5988966892869256,
     "p75": 83.49999999999999,
     "pierde": 0.12162162162162163
@@ -1073,6 +1193,9 @@
     "escala": "1 a 10 M",
     "peliculas": 1453,
     "multiplo_mediano": 4.643223333333333,
+    "budget_mediano": 5000000.0,
+    "revenue_mediana": 20908467.0,
+    "ganancia_mediana": 15905379.0,
     "p25": 2.045681375,
     "p75": 9.529067333333334,
     "pierde": 0.1486579490708878
@@ -1081,6 +1204,9 @@
     "escala": "10 a 100 M",
     "peliculas": 4223,
     "multiplo_mediano": 1.9889299,
+    "budget_mediano": 27000000.0,
+    "revenue_mediana": 52293982.0,
+    "ganancia_mediana": 23992802.0,
     "p25": 0.98,
     "p75": 3.5870923666666665,
     "pierde": 0.2547951693109164
@@ -1089,6 +1215,9 @@
     "escala": "Más de 100 M",
     "peliculas": 567,
     "multiplo_mediano": 2.5960247045454548,
+    "budget_mediano": 150000000.0,
+    "revenue_mediana": 373515621.0,
+    "ganancia_mediana": 227580051.0,
     "p25": 1.4452755806666666,
     "p75": 4.010354891538461,
     "pierde": 0.12522045855379188

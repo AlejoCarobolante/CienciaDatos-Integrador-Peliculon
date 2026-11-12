@@ -231,3 +231,47 @@ def pruebas_correccion(train: pd.DataFrame, cv, best_params: dict) -> pd.DataFra
                       "desvio_mejora": dif.std(ddof=0), "cortes_gana": f"{(dif > 0).sum()} de {len(dif)}",
                       "supera_ruido": bool(dif.mean() > dif.std(ddof=0)), "que_es": que})
     return pd.DataFrame(filas)
+
+
+# Grupos de las columnas nuevas (Entrega 4), para medir cuánto aporta cada uno
+GRUPOS_CTX = {
+    "Historia de la saga y si es secuela": ["saga_hist", "es_secuela", "kw_secuela"],
+    "Historia del director y del actor": ["director_hist", "director_n_prev", "actor_hist", "actor_n_prev"],
+    "De qué se trata (palabras clave)": ["kw_remake", "kw_libro", "kw_comic", "kw_historia_real", "kw_videojuego",
+                                          "kw_navidad", "kw_musical", "kw_found_footage"],
+    "Países que la producen": ["paises_n", "es_eeuu"],
+}
+
+
+def con_y_sin_contexto(train: pd.DataFrame, test: pd.DataFrame, cv, best_params: dict) -> dict:
+    """El mismo modelo final con y sin las columnas nuevas de TMDb (director, actor, saga, palabras clave, países).
+
+    - Validación cruzada temporal y test del modelo final completo y sin COLS_CTX (mismo pipeline, misma semilla).
+    - Cuánto aporta cada grupo de columnas nuevas: MAE de validación del Random Forest ajustado sin ese grupo,
+      menos el MAE con todas (positivo = sin ese grupo se equivoca más, o sea que aporta).
+    """
+    from sklearn.metrics import mean_absolute_error, r2_score
+
+    X, y, Xt, yt = train[FEATURES], train["y"], test[FEATURES], test["y"]
+    res = {}
+    for clave, excluir in [("con", ()), ("sin", COLS_CTX)]:
+        r = cross_validate(modelo_final(best_params, excluir=excluir), X, y, cv=cv,
+                           scoring={"MAE": "neg_mean_absolute_error", "R2": "r2"})
+        pred = modelo_final(best_params, excluir=excluir).fit(X, y).predict(Xt)
+        res[clave] = {"mae_cv": float(-r["test_MAE"].mean()), "r2_cv": float(r["test_R2"].mean()),
+                      "folds_mae": [float(v) for v in -r["test_MAE"]],
+                      "mae_test": float(mean_absolute_error(yt, pred)), "r2_test": float(r2_score(yt, pred)),
+                      "pred_test": pred}
+    dif = np.array(res["sin"]["folds_mae"]) - np.array(res["con"]["folds_mae"])
+    res["mejora_cv"] = {"media": float(dif.mean()), "desvio": float(dif.std(ddof=0)),
+                        "cortes_gana": f"{(dif > 0).sum()} de {len(dif)}", "supera_ruido": bool(dif.mean() > dif.std(ddof=0))}
+    base = -cross_validate(rf_ajustado(best_params), X, y, cv=cv, scoring="neg_mean_absolute_error")["test_score"]
+    grupos = []
+    for nombre, cols in GRUPOS_CTX.items():
+        sin = -cross_validate(rf_ajustado(best_params, excluir=cols), X, y, cv=cv,
+                              scoring="neg_mean_absolute_error")["test_score"]
+        d = sin - base
+        grupos.append({"grupo": nombre, "columnas": cols, "aporte": float(d.mean()), "desvio": float(d.std(ddof=0)),
+                       "cortes": f"{(d > 0).sum()} de {len(d)}"})
+    res["grupos"] = grupos
+    return res
