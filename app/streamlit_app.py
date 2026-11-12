@@ -144,6 +144,8 @@ div[data-testid="stMarkdownContainer"] p.grafico-bajada, .grafico-bajada {{font-
 .capitulo .num {{font-size: 1.6rem; font-weight: 850; color: {S.MODELO}; line-height: 1;}}
 .capitulo .q {{font-size: .88rem; color: {S.TINTA_2}; margin-top: .25rem;}}
 div[data-testid="stExpander"] details {{background: {S.PANEL}; border-color: {S.GRILLA};}}
+div[data-testid="stHorizontalBlock"]:has(div.pb-pegajoso) {{align-items: flex-start;}}
+div[data-testid="stColumn"]:has(div.pb-pegajoso) {{position: sticky; top: 3.2rem; align-self: flex-start;}}
 @media (max-width: 760px) {{
   .tarjetas, .capitulos {{grid-template-columns: 1fr;}} .flujo {{flex-direction: column;}} .flecha {{display: none;}}
   .hero {{padding: 1.4rem;}} .hero h1 {{font-size: 2rem;}}
@@ -1274,226 +1276,323 @@ with tab_explora:
                     f"Después del estreno (no lo usa el modelo): {S.num(f['vote_average'], 1)} de 10 con "
                     f"{S.num(f['vote_count'])} votos.")
 
-with tab_proba:
-    st.markdown("Cargá una película que todavía no se estrenó. El modelo usa solo lo que se sabe antes del estreno. "
-                "Los menús muestran únicamente lo que el modelo vio al entrenar.")
-    num_r, cat_r = R["numericas"], R["categoricas"]
-    OTRA = "Otra (el modelo no la conoce)"
+num_r, cat_r = R["numericas"], R["categoricas"]
+OTRA = "Otra (el modelo no la conoce)"
+TEMAS_ES = {"kw_libro": "Basada en un libro", "kw_comic": "Cómic o superhéroes", "kw_historia_real": "Historia real",
+            "kw_remake": "Remake", "kw_videojuego": "Basada en un videojuego", "kw_navidad": "Navidad",
+            "kw_musical": "Musical", "kw_found_footage": "Found footage"}
+CARGADAS = ["budget", "runtime", "release_year", "director_popularity", "lead_actor_popularity", "co_star_popularity"]
+# Límites para recortar: todo el alcance (entrenamiento + test), o sea, lo que el modelo ya predijo en el pipeline.
+# Así una película real cargada como punto de partida da lo mismo que en «Explorá».
+COLS_RECORTE = E.COLS_LOG + E.COLS_NUM + ["director_hist", "actor_hist", "saga_hist", "director_n_prev", "actor_n_prev",
+                                           "paises_n"]
+LIMITES = {c: (float(P[c].min()), float(P[c].max())) for c in COLS_RECORTE}
+ANIO_MAX_TEST = int(anios_test[1])
 
-    def opciones_cat(col):
-        return cat_r[col]["categorias"]
 
-    def conteo_cat(col, valor):
-        c = cat_r[col]
-        return dict(zip(c["categorias"], c["conteo"])).get(valor, 0)
+def opciones_cat(col):
+    return cat_r[col]["categorias"]
 
-    with st.form("caso"):
-        st.markdown("**Lo básico**")
-        a1, a2, a3 = st.columns(3)
-        budget = a1.number_input("Presupuesto (USD)", min_value=10_000.0, max_value=5_000_000_000.0,
-                                 value=float(num_r["budget"]["mediana"]), step=1_000_000.0, format="%.0f",
-                                 help=f"El modelo vio de {S.usd(num_r['budget']['min'])} a {S.usd(num_r['budget']['max'])}.")
-        runtime = a2.number_input("Duración (minutos)", min_value=1, max_value=600,
-                                  value=int(num_r["runtime"]["mediana"]), step=1)
-        anio = a3.number_input("Año de estreno", min_value=1900, max_value=2040,
-                               value=int(num_r["release_year"]["p99"]), step=1,
-                               help=f"El modelo se entrenó con películas de {int(num_r['release_year']['min'])} a "
-                                    f"{int(num_r['release_year']['max'])}.")
-        b1, b2, b3 = st.columns(3)
-        mes = b1.selectbox("Mes de estreno", list(range(1, 13)), index=5, format_func=lambda m: S.MESES[m - 1])
-        dia = b2.selectbox("Día de la semana", list(range(7)), index=4, format_func=lambda d: S.DIAS[d])
-        idioma = b3.selectbox("Idioma original", opciones_cat("original_language") + [OTRA],
-                              format_func=lambda c: c if c == OTRA else S.idioma_es(c))
-        g1, g2 = st.columns(2)
-        gen1 = g1.selectbox("Género principal", [g for g in opciones_cat("primary_genre")] + [OTRA],
-                            format_func=lambda g: g if g == OTRA else S.genero_es(g))
-        gen2 = g2.selectbox("Género secundario", opciones_cat("secondary_genre") + [OTRA],
-                            format_func=lambda g: g if g == OTRA else S.genero_es(g))
-        st.markdown("**Quién la hace**")
-        p1, p2 = st.columns(2)
-        prod1 = p1.selectbox("Productora principal", opciones_cat("primary_production_company") + [OTRA],
-                             help="Ordenadas por cantidad de películas en el entrenamiento.")
-        prod2 = p2.selectbox("Coproductora", opciones_cat("co_production_company") + [OTRA],
-                             format_func=lambda c: "Sin coproductora" if c == "Unknown" else c)
-        NUEVO = None
 
-        def lista(clave):
-            c = cat_r[clave]
-            return [NUEVO] + c["ids"], dict(zip(c["ids"], c["nombres"])), dict(zip(c["ids"], c["conteo"]))
+NINGUNO = 0  # opción «ninguno» de los menús de director, protagonista y saga (los ids de TMDb empiezan en 1)
 
-        dir_ids, dir_nom, dir_cnt = lista("director_id")
-        act_ids, act_nom, act_cnt = lista("lead_actor_id")
-        saga_ids, saga_nom, saga_cnt = lista("collection_id")
-        h1, h2 = st.columns(2)
-        director = h1.selectbox("Director", dir_ids, format_func=lambda i: "Otro o primera película" if i is None
-                                else f"{dir_nom[i]} ({dir_cnt[i]} películas)",
-                                help="Directores con 2 o más películas en el dataset. El modelo usa cómo les fue antes.")
-        actor = h2.selectbox("Actor o actriz principal", act_ids, format_func=lambda i: "Otro o sin historia" if i is None
-                             else f"{act_nom[i]} ({act_cnt[i]} películas)")
-        q1, q2, q3 = st.columns(3)
-        pop_dir = q1.number_input("Popularidad del director (TMDb)", min_value=0.0, max_value=1000.0,
-                                  value=float(num_r["director_popularity"]["mediana"]), step=0.1, format="%.2f")
-        pop_lead = q2.number_input("Popularidad del protagonista", min_value=0.0, max_value=1000.0,
-                                   value=float(num_r["lead_actor_popularity"]["mediana"]), step=0.1, format="%.2f")
-        pop_co = q3.number_input("Popularidad del coprotagonista", min_value=0.0, max_value=1000.0,
-                                 value=float(num_r["co_star_popularity"]["mediana"]), step=0.1, format="%.2f")
-        st.caption("Popularidad de TMDb: la mediana del entrenamiento es "
-                   f"{S.num(num_r['director_popularity']['mediana'], 1)} (director), "
-                   f"{S.num(num_r['lead_actor_popularity']['mediana'], 1)} (protagonista) y "
-                   f"{S.num(num_r['co_star_popularity']['mediana'], 1)} (coprotagonista).")
-        st.markdown("**De qué se trata**")
+
+def lista_ids(clave):
+    c = cat_r[clave]
+    return [NINGUNO] + c["ids"], dict(zip(c["ids"], c["nombres"])), dict(zip(c["ids"], c["conteo"]))
+
+
+DIR_IDS, DIR_NOM, DIR_CNT = lista_ids("director_id")
+ACT_IDS, ACT_NOM, ACT_CNT = lista_ids("lead_actor_id")
+SAGA_IDS, SAGA_NOM, SAGA_CNT = lista_ids("collection_id")
+saga_mayor = SAGA_IDS[1] if len(SAGA_IDS) > 1 else NINGUNO   # la saga con más películas (para el ejemplo)
+
+
+def en(valor, opciones, otra=OTRA):
+    return valor if valor in opciones else otra
+
+
+def valores_tipicos() -> dict:
+    return {"pb_budget": float(num_r["budget"]["mediana"]), "pb_runtime": int(num_r["runtime"]["mediana"]),
+            "pb_anio": 2025, "pb_mes": 6, "pb_dia": 4, "pb_idioma": "en",
+            "pb_gen1": en("Drama", opciones_cat("primary_genre")), "pb_gen2": opciones_cat("secondary_genre")[0],
+            "pb_prod1": opciones_cat("primary_production_company")[0],
+            "pb_prod2": en("Unknown", opciones_cat("co_production_company")),
+            "pb_pop_dir": float(num_r["director_popularity"]["mediana"]),
+            "pb_pop_lead": float(num_r["lead_actor_popularity"]["mediana"]),
+            "pb_pop_co": float(num_r["co_star_popularity"]["mediana"]),
+            "pb_director": NINGUNO, "pb_actor": NINGUNO, "pb_secuela": False, "pb_saga": NINGUNO, "pb_temas": [],
+            "pb_eeuu": True, "pb_paises": 1, "pb_real": None, "pb_kw_raw": None, "pb_paises_raw": None}
+
+
+EJEMPLOS = {
+    "Valores típicos": {},
+    "Ejemplo: terror barato": {"pb_budget": 1_000_000.0, "pb_runtime": 88, "pb_gen1": en("Horror", opciones_cat("primary_genre")),
+                               "pb_gen2": en("Thriller", opciones_cat("secondary_genre"), opciones_cat("secondary_genre")[0]),
+                               "pb_mes": 10, "pb_temas": ["kw_found_footage"]},
+    "Ejemplo: superproducción de saga": {"pb_budget": 200_000_000.0, "pb_runtime": 140,
+                                         "pb_gen1": en("Action", opciones_cat("primary_genre")),
+                                         "pb_gen2": en("Adventure", opciones_cat("secondary_genre"), opciones_cat("secondary_genre")[0]),
+                                         "pb_secuela": True, "pb_saga": saga_mayor, "pb_mes": 5,
+                                         "pb_temas": ["kw_comic"], "pb_pop_lead": float(num_r["lead_actor_popularity"]["p99"])},
+    "Ejemplo: drama de autor": {"pb_budget": 8_000_000.0, "pb_runtime": 125, "pb_gen1": en("Drama", opciones_cat("primary_genre")),
+                                "pb_mes": 11, "pb_temas": ["kw_historia_real"]},
+}
+MUESTRA = P.sort_values("vote_count", ascending=False).head(150)
+ORIGENES = list(EJEMPLOS) + [f"{t} ({a})" for t, a in zip(MUESTRA["title"], MUESTRA["release_year"])]
+ID_ORIGEN = dict(zip(ORIGENES[len(EJEMPLOS):], MUESTRA["movie_id"]))
+
+
+def id_en(valor, nombres: dict):
+    """El id si está en la lista del formulario (como int de Python); si no, «ninguno»."""
+    if pd.isna(valor):
+        return NINGUNO
+    return int(valor) if int(valor) in nombres else NINGUNO
+
+
+def desde_pelicula(movie_id: int) -> dict:
+    f = P.loc[P["movie_id"] == movie_id].iloc[0]
+    temas = [k for k in TEMAS_ES if bool(f[k])]
+    return {"pb_budget": float(f["budget"]), "pb_runtime": int(f["runtime"]), "pb_anio": int(f["release_year"]),
+            "pb_mes": int(f["release_month"]), "pb_dia": int(f["release_day_of_week"]),
+            "pb_idioma": en(f["original_language"], opciones_cat("original_language")),
+            "pb_gen1": en(f["primary_genre"], opciones_cat("primary_genre")),
+            "pb_gen2": en(f["secondary_genre"], opciones_cat("secondary_genre")),
+            "pb_prod1": en(f["primary_production_company"], opciones_cat("primary_production_company")),
+            "pb_prod2": en(f["co_production_company"], opciones_cat("co_production_company")),
+            "pb_pop_dir": float(f["director_popularity"]), "pb_pop_lead": float(f["lead_actor_popularity"]),
+            "pb_pop_co": float(f["co_star_popularity"]),
+            "pb_director": id_en(f["director_id"], DIR_NOM), "pb_actor": id_en(f["lead_actor_id"], ACT_NOM),
+            "pb_secuela": bool(f["es_secuela"]), "pb_saga": id_en(f["collection_id"], SAGA_NOM),
+            "pb_temas": temas, "pb_eeuu": bool(f["es_eeuu"]), "pb_paises": max(int(f["paises_n"]), 1),
+            "pb_real": int(movie_id),
+            # palabras clave y países tal cual vienen de TMDb, mientras no se toquen esos campos
+            "pb_kw_raw": (f["keywords"], temas, bool(f["es_secuela"])),
+            "pb_paises_raw": (f["production_countries"], bool(f["es_eeuu"]), max(int(f["paises_n"]), 1))}
+
+
+def aplicar_origen():
+    elegido = st.session_state["pb_origen"]
+    st.session_state.update(valores_tipicos())
+    if elegido in EJEMPLOS:
+        st.session_state.update(EJEMPLOS[elegido])
+    else:
+        st.session_state.update(desde_pelicula(int(ID_ORIGEN[elegido])))
+
+
+if "pb_budget" not in st.session_state:
+    st.session_state.update(valores_tipicos())
+
+
+def armar_casos(base: dict, budgets) -> pd.DataFrame:
+    """Una fila por presupuesto, con las columnas derivadas y el recorte a lo que vio el modelo."""
+    filas = pd.DataFrame([{**base, "budget": float(b)} for b in budgets])
+    filas = F.agregar_features(filas, ref)
+    recortadas = set()
+    for c in COLS_RECORTE:
+        if c == "release_year" and (filas[c] <= ANIO_MAX_TEST).all():
+            continue  # años del test: el modelo ya los predijo así en el pipeline
+        lo, hi = LIMITES[c]
+        fuera = filas[c].notna() & ((filas[c] < lo) | (filas[c] > hi))
+        if fuera.any():
+            recortadas.add(c)
+            filas.loc[fuera, c] = filas.loc[fuera, c].clip(lo, hi)
+    return filas, recortadas
+
+
+@st.fragment
+def proba_el_modelo():
+    # Solo este bloque se vuelve a correr al tocar un control: la respuesta es instantánea.
+    o1, o2 = st.columns([1.6, 3])
+    o1.selectbox("Arrancá desde…", ORIGENES, key="pb_origen", on_change=aplicar_origen,
+                 help="Elegí un ejemplo o una película real y se completan todos los datos. Después cambiá lo que quieras.")
+    real = st.session_state.get("pb_real")
+    o2.markdown("<p class='grafico-bajada' style='margin-top:1.9rem'>Elegí un punto de partida y cambiá solo lo que quieras "
+                "probar: el resultado se actualiza al instante, a la derecha. "
+                + ("Partiste de una película real: el punto blanco es lo que pasó de verdad." if real else "")
+                + "</p>", unsafe_allow_html=True)
+
+    izq, der = st.columns([1, 1.35], gap="large")
+    with izq:
+        st.markdown("**Lo que más pesa**")
+        st.number_input("Presupuesto (USD)", min_value=10_000.0, max_value=5_000_000_000.0, step=1_000_000.0,
+                        format="%.0f", key="pb_budget",
+                        help=f"El modelo vio de {S.usd(num_r['budget']['min'])} a {S.usd(num_r['budget']['max'])}.")
+        a1, a2 = st.columns(2)
+        a1.selectbox("Género principal", opciones_cat("primary_genre") + [OTRA], key="pb_gen1",
+                     format_func=lambda g: g if g == OTRA else S.genero_es(g))
+        a2.selectbox("Mes de estreno", list(range(1, 13)), key="pb_mes", format_func=lambda m: S.MESES[m - 1])
         s1, s2 = st.columns([1, 2])
-        secuela = s1.checkbox("Es una secuela", help="No es la primera película de su saga.")
-        saga = s2.selectbox("Saga", saga_ids, format_func=lambda i: "Ninguna u otra" if i is None
-                            else f"{saga_nom[i]} ({saga_cnt[i]} películas)",
-                            help="Si es secuela de una saga conocida, el modelo usa cómo les fue a las anteriores.")
-        GRUPOS_ES = {"kw_libro": "Basada en un libro", "kw_comic": "Cómic o superhéroes",
-                     "kw_historia_real": "Historia real o biografía", "kw_remake": "Remake",
-                     "kw_videojuego": "Basada en un videojuego", "kw_navidad": "Navidad", "kw_musical": "Musical",
-                     "kw_found_footage": "Found footage"}
-        t1, t2, t3 = st.columns([2, 1, 1])
-        temas = t1.multiselect("Temas", list(GRUPOS_ES), format_func=GRUPOS_ES.get, placeholder="Ninguno de estos")
-        eeuu = t2.checkbox("Producida en EE. UU.", value=True)
-        n_paises = t3.number_input("Países que la producen", min_value=1, max_value=10, value=1, step=1)
-        enviado = st.form_submit_button("Predecir", type="primary")
+        s1.checkbox("Es una secuela", key="pb_secuela")
+        s2.selectbox("Saga", SAGA_IDS, key="pb_saga", format_func=lambda i: "Ninguna u otra" if i == NINGUNO
+                     else f"{SAGA_NOM[i]} ({SAGA_CNT[i]})")
+        d1, d2 = st.columns(2)
+        d1.selectbox("Director", DIR_IDS, key="pb_director", format_func=lambda i: "Otro o debutante" if i == NINGUNO
+                     else f"{DIR_NOM[i]} ({DIR_CNT[i]})")
+        d2.selectbox("Protagonista", ACT_IDS, key="pb_actor", format_func=lambda i: "Otro o sin historia" if i == NINGUNO
+                     else f"{ACT_NOM[i]} ({ACT_CNT[i]})")
+        st.multiselect("De qué se trata", list(TEMAS_ES), key="pb_temas", format_func=TEMAS_ES.get,
+                       placeholder="Ninguno de estos")
+        with st.expander("Más datos (opcional)"):
+            b1, b2, b3 = st.columns(3)
+            b1.number_input("Duración (min)", min_value=1, max_value=600, step=1, key="pb_runtime")
+            b2.number_input("Año", min_value=1900, max_value=2040, step=1, key="pb_anio")
+            b3.selectbox("Día", list(range(7)), key="pb_dia", format_func=lambda d: S.DIAS[d])
+            c1, c2 = st.columns(2)
+            c1.selectbox("Idioma original", opciones_cat("original_language") + [OTRA], key="pb_idioma",
+                         format_func=lambda c: c if c == OTRA else S.idioma_es(c))
+            c2.selectbox("Género secundario", opciones_cat("secondary_genre") + [OTRA], key="pb_gen2",
+                         format_func=lambda g: g if g == OTRA else S.genero_es(g))
+            c1.selectbox("Productora principal", opciones_cat("primary_production_company") + [OTRA], key="pb_prod1")
+            c2.selectbox("Coproductora", opciones_cat("co_production_company") + [OTRA], key="pb_prod2",
+                         format_func=lambda c: "Sin coproductora" if c == "Unknown" else c)
+            q1, q2, q3 = st.columns(3)
+            q1.number_input("Pop. director", min_value=0.0, max_value=1000.0, step=0.1, format="%.2f", key="pb_pop_dir")
+            q2.number_input("Pop. protag.", min_value=0.0, max_value=1000.0, step=0.1, format="%.2f", key="pb_pop_lead")
+            q3.number_input("Pop. coprotag.", min_value=0.0, max_value=1000.0, step=0.1, format="%.2f", key="pb_pop_co")
+            e1, e2 = st.columns(2)
+            e1.checkbox("Producida en EE. UU.", key="pb_eeuu")
+            e2.number_input("Países que la producen", min_value=1, max_value=10, step=1, key="pb_paises")
+            st.caption("Popularidad de TMDb (la mediana del entrenamiento es "
+                       f"{S.num(num_r['director_popularity']['mediana'], 1)} para el director y "
+                       f"{S.num(num_r['lead_actor_popularity']['mediana'], 1)} para el protagonista).")
 
-    valores = {"budget": budget, "runtime": runtime, "release_year": anio, "director_popularity": pop_dir,
-               "lead_actor_popularity": pop_lead, "co_star_popularity": pop_co}
-    nombres_num = {"budget": "El presupuesto", "runtime": "La duración", "release_year": "El año",
-                   "director_popularity": "La popularidad del director",
-                   "lead_actor_popularity": "La popularidad del protagonista",
-                   "co_star_popularity": "La popularidad del coprotagonista"}
-    fmt_num = {"budget": S.usd, "release_year": lambda v: str(int(v))}
-    avisos, notas = [], []
-    for c, v in valores.items():
-        r = num_r[c]
-        f_ = fmt_num.get(c, lambda x: S.num(x, 1))
-        if v < r["min"] or v > r["max"]:
-            extra = ""
-            if c == "release_year" and v > r["max"]:
-                extra = (f" Para años posteriores, el modelo responde como si fuera {int(r['max'])}: así se midió "
-                         f"el test {anios_test[0]}–{anios_test[1]}, con un error típico de {S.mult(FIN['factor_test'])}.")
-            avisos.append(f"**{nombres_num[c]} ({f_(v)}) está fuera de lo que vio el modelo** "
-                          f"(de {f_(r['min'])} a {f_(r['max'])}). Para predecir se usa el extremo más cercano que vio: "
-                          f"tomá la predicción con mucha cautela.{extra}")
-        elif v < r["p01"] or v > r["p99"]:
-            notas.append(f"{nombres_num[c]} ({f_(v)}) es poco común: solo el 1% de las películas del entrenamiento "
-                         f"está por {'debajo' if v < r['p01'] else 'encima'}.")
-    for col, valor, nombre in [("original_language", idioma, "El idioma"), ("primary_genre", gen1, "El género principal"),
-                               ("secondary_genre", gen2, "El género secundario"),
-                               ("primary_production_company", prod1, "La productora principal"),
-                               ("co_production_company", prod2, "La coproductora")]:
-        n = conteo_cat(col, valor)
-        if valor == OTRA:
-            avisos.append(f"**{nombre} es una categoría que el modelo nunca vio.** La trata como «otras» "
-                          "(las categorías poco frecuentes).")
-        elif n < cat_r[col]["min_frecuencia"]:
-            notas.append(f"{nombre} aparece {n} {'vez' if n == 1 else 'veces'} en el entrenamiento: el modelo la "
-                         f"agrupa con «otras» (necesita al menos {cat_r[col]['min_frecuencia']}).")
-
-    caso = pd.DataFrame([{
-        "movie_id": -1, "title": "Tu película", "budget": budget, "runtime": runtime, "release_year": int(anio),
-        "release_month": int(mes), "release_day_of_week": int(dia),
-        "original_language": "__otra__" if idioma == OTRA else idioma,
-        "primary_genre": "__otra__" if gen1 == OTRA else gen1,
-        "secondary_genre": "__otra__" if gen2 == OTRA else gen2,
-        "primary_production_company": "__otra__" if prod1 == OTRA else prod1,
-        "co_production_company": "__otra__" if prod2 == OTRA else prod2,
-        "director_popularity": pop_dir, "lead_actor_popularity": pop_lead, "co_star_popularity": pop_co,
-    }])
-    palabras = [F.GRUPOS_KEYWORDS[g][0] for g in temas] + (["sequel"] if secuela else [])
-    paises = (["US"] if eeuu else []) + [f"P{i}" for i in range(int(n_paises) - (1 if eeuu else 0))]
-    # La saga solo cuenta si es secuela: la primera película de una saga no tiene películas anteriores
-    caso = caso.assign(director_id=director, lead_actor_id=actor, collection_id=saga if secuela else None,
-                       saga_position=1 if secuela else 0, keywords="|".join(palabras),
-                       production_countries="|".join(paises))
-    caso = F.agregar_features(caso, ref)
-    if director is None or actor is None:
-        notas.append("Sin director o actor con historia, el modelo completa ese dato con la mediana "
-                     "(así lo trata también cuando entrena).")
-    if saga is not None and not secuela:
-        notas.append("Elegiste una saga sin marcar «Es una secuela»: si es la primera de la saga, no hay películas "
-                     "anteriores, así que el modelo no usa la saga.")
-    if secuela and saga is None:
-        notas.append("Marcaste secuela sin elegir una saga conocida: el modelo usa que es secuela, pero no tiene "
-                     "cómo les fue a las anteriores.")
-    # Ningún valor más extremo que lo que vio el modelo: se recorta al rango del entrenamiento (columnas cargadas y
-    # derivadas). Sin esto, Ridge (uno de los tres) extrapola en línea recta y dispara la predicción del promedio.
-    entreno = P[P["conjunto"] == "entrenamiento"]
-    recortadas = []
-    for c in E.COLS_LOG + E.COLS_NUM + ["director_hist", "actor_hist", "saga_hist", "director_n_prev", "actor_n_prev",
-                                        "paises_n"]:
-        v = caso[c].iloc[0]
-        if pd.notna(v):
-            lo, hi = float(entreno[c].min()), float(entreno[c].max())
-            if v < lo or v > hi:
-                caso[c] = min(max(float(v), lo), hi)
-                if c not in valores:  # las cargadas a mano ya tienen su aviso arriba
-                    recortadas.append(VAR_ES.get(c, c).lower())
-    if recortadas:
-        avisos.append("**Hay valores más extremos que cualquier película que vio el modelo** ("
-                      + ", ".join(recortadas) + "): por ejemplo, un presupuesto muy alto para ese género. Para "
-                      "predecir se usan los extremos que sí vio.")
-    y_hat = float(modelo.predict(caso[E.FEATURES])[0])
-    multiplo = 10 ** y_hat
+    ss = st.session_state
+    nada = lambda v: None if v == NINGUNO else v  # noqa: E731
+    secuela, saga = ss["pb_secuela"], nada(ss["pb_saga"])
+    otra = lambda v: "__otra__" if v == OTRA else v  # noqa: E731
+    kw_raw, pa_raw = ss.get("pb_kw_raw"), ss.get("pb_paises_raw")
+    if kw_raw and list(ss["pb_temas"]) == list(kw_raw[1]) and secuela == kw_raw[2]:
+        palabras = kw_raw[0]
+    else:
+        palabras = "|".join([F.GRUPOS_KEYWORDS[g][0] for g in ss["pb_temas"]] + (["sequel"] if secuela else []))
+    if pa_raw and ss["pb_eeuu"] == pa_raw[1] and int(ss["pb_paises"]) == pa_raw[2]:
+        paises = pa_raw[0]
+    else:
+        paises = "|".join((["US"] if ss["pb_eeuu"] else []) +
+                          [f"P{i}" for i in range(int(ss["pb_paises"]) - (1 if ss["pb_eeuu"] else 0))])
+    base = {"movie_id": -1, "title": "Tu película", "runtime": ss["pb_runtime"], "release_year": int(ss["pb_anio"]),
+            "release_month": int(ss["pb_mes"]), "release_day_of_week": int(ss["pb_dia"]),
+            "original_language": otra(ss["pb_idioma"]), "primary_genre": otra(ss["pb_gen1"]),
+            "secondary_genre": otra(ss["pb_gen2"]), "primary_production_company": otra(ss["pb_prod1"]),
+            "co_production_company": otra(ss["pb_prod2"]), "director_popularity": ss["pb_pop_dir"],
+            "lead_actor_popularity": ss["pb_pop_lead"], "co_star_popularity": ss["pb_pop_co"],
+            "director_id": nada(ss["pb_director"]), "lead_actor_id": nada(ss["pb_actor"]),
+            # la saga solo cuenta si es secuela: la primera de una saga no tiene películas anteriores
+            "collection_id": saga if secuela else None, "saga_position": 1 if secuela else 0,
+            "keywords": palabras, "production_countries": paises}
+    budget = float(ss["pb_budget"])
+    caso, recortadas = armar_casos(base, [budget])
+    multiplo = float(10 ** modelo.predict(caso[E.FEATURES])[0])
     factor = FIN["factor_test"]
     bajo, alto = multiplo / factor, multiplo * factor
 
-    for a in avisos:
-        st.warning(a)
-    for n_ in notas:
-        st.info(n_)
+    # Avisos: lo que el modelo nunca vio
+    avisos, notas = [], []
+    for c in CARGADAS:
+        v, r = float(base.get(c, budget) if c != "budget" else budget), num_r[c]
+        if c == "release_year":
+            if v > ANIO_MAX_TEST:
+                avisos.append(f"El año {int(v)} es posterior a todo lo que vio el modelo: responde como si fuera "
+                              f"{ANIO_MAX_TEST}.")
+            elif v < r["min"]:
+                avisos.append(f"El año {int(v)} es anterior a todo lo que vio el modelo.")
+            continue
+        if v < r["min"] or v > r["max"]:
+            nombre = {"budget": "El presupuesto", "runtime": "La duración", "director_popularity": "La popularidad del director",
+                      "lead_actor_popularity": "La popularidad del protagonista",
+                      "co_star_popularity": "La popularidad del coprotagonista"}[c]
+            f_ = S.usd if c == "budget" else (lambda x: S.num(x, 1))
+            avisos.append(f"{nombre} ({f_(v)}) está fuera de lo que vio el modelo (de {f_(r['min'])} a {f_(r['max'])}): "
+                          "usa el extremo más cercano.")
+    extra = sorted(VAR_ES.get(c, c).lower() for c in recortadas if c not in CARGADAS)
+    if extra:
+        avisos.append("Hay datos más extremos que cualquier película que vio (" + ", ".join(extra) +
+                      "): usa los extremos que sí vio.")
+    for clave, nombre in [("pb_idioma", "Idioma"), ("pb_gen1", "Género principal"), ("pb_gen2", "Género secundario"),
+                          ("pb_prod1", "Productora"), ("pb_prod2", "Coproductora")]:
+        if ss[clave] == OTRA:
+            notas.append(f"{nombre}: el modelo no conoce ese valor y lo agrupa con «otras».")
+    if saga is not None and not secuela:
+        notas.append("Elegiste una saga sin marcar «Es una secuela»: si es la primera, no hay películas anteriores y el "
+                     "modelo no usa la saga.")
 
-    r1, r2 = st.columns([1.1, 2])
-    with r1:
-        verbo = "recuperaría" if multiplo >= 1 else "recuperaría solo"
-        st.markdown(f"### {verbo.capitalize()} {S.mult(multiplo)} lo invertido")
-        roi_hat = multiplo - 1
-        st.markdown(f"ROI predicho: **{'+' if roi_hat >= 0 else ''}{S.pct(roi_hat)}**. Con un presupuesto de "
-                    f"{S.usd(budget)}, eso es una recaudación de unos **{S.usd(budget * multiplo)}**.")
-        st.markdown(f"**Rango típico de error:** entre {S.mult(bajo)} y {S.mult(alto)} "
-                    f"(lo predicho dividido y multiplicado por {S.num(factor, 2)}, el error típico del modelo en el test). "
-                    + ("Ni el extremo de abajo pierde plata." if bajo >= 1 else
-                       "Ni el extremo de arriba recupera lo invertido." if alto < 1 else
-                       "El rango cruza ×1: puede ganar o perder plata."))
-        st.caption(f"Adivinar (el piso) diría siempre {S.mult(10 ** FIN['mediana_piso_y'])}.")
-        CALCULADAS = ["star_power_ratio", "director_leverage", "director_vs_cast", "power_pack",
-                      "budget_vs_genre_median", "is_horror_low_budget", "prod_hist_roi", "director_hist",
-                      "actor_hist", "saga_hist", "es_secuela"]
-        with st.expander("Qué calculó la app con tus datos"):
-            st.dataframe(pd.DataFrame({
-                "Columna": [VAR_ES.get(c, c) for c in CALCULADAS],
-                "Valor": ["sin historia" if pd.isna(caso[c].iloc[0]) else S.num(caso[c].iloc[0], 3)
-                          for c in CALCULADAS]}), hide_index=True, width="stretch")
-            st.caption("Con la misma función que el notebook (include/modelo/features.py). La mediana por género y las "
-                       "historias de la productora, el director, el actor y la saga (mediana de log10 del múltiplo en "
-                       "los años anteriores al estreno) salen de las películas con las que se construyó el modelo.")
-    with r2:
-        # Gráfico: dónde cae tu película en el panorama.
-        #  datos: predicciones.parquet (todas, en gris) + tu caso (una fila)
-        #  mapeo: x = presupuesto (log), y = múltiplo (log), las mismas escalas que «Explorá»
-        #  marcas: círculos grises = múltiplo real de las películas; regla dorada = rango típico de error;
-        #          rombo dorado = lo que predice el modelo para tu película
-        fondo = alt.Chart(P[["budget", "multiplo_real"]]).mark_circle(size=14, color=S.GRIS_1, opacity=0.45).encode(
+    with der:
+        st.markdown("<div class='pb-pegajoso'></div>", unsafe_allow_html=True)
+        verbo = "Recuperaría" if multiplo >= 1 else "Recuperaría solo"
+        st.markdown(f"<p class='kicker' style='margin-top:.2rem'>Lo que predice el modelo</p>"
+                    f"<p class='titulo-seccion' style='margin-bottom:.2rem'>{verbo} <span style='color:{S.DORADO}'>"
+                    f"{S.mult(multiplo)}</span> lo invertido</p>"
+                    f"<p class='grafico-bajada'>Recaudación de unos <b>{S.usd(budget * multiplo)}</b> · rango típico "
+                    f"{S.mult(bajo)} a {S.mult(alto)} · "
+                    + ("ni lo más bajo pierde plata" if bajo >= 1 else "ni lo más alto recupera lo invertido" if alto < 1
+                       else "puede ganar o perder plata") + "</p>", unsafe_allow_html=True)
+        fila_real = P.loc[P["movie_id"] == real].iloc[0] if real else None
+        if fila_real is not None:
+            st.markdown(f"<p class='grafico-bajada'>De verdad, <i>{fila_real['title']}</i> recuperó "
+                        f"<b>{S.mult(fila_real['multiplo_real'])}</b>"
+                        + (" (el modelo la vio al aprender)." if fila_real["conjunto"] == "entrenamiento"
+                           else " (el modelo nunca la vio).") + "</p>", unsafe_allow_html=True)
+
+        # Gráfico: tu película sobre el panorama.
+        #  datos: predicciones.parquet (gris = lo que recuperaron de verdad) + tu caso + (si partiste de una real) lo real
+        #  mapeo: x = presupuesto (LOG), y = múltiplo (LOG), las mismas escalas que «Explorá»
+        #  marcas: círculos grises; regla dorada = rango típico; rombo dorado = predicción; círculo blanco = lo real
+        fondo = alt.Chart(P[["budget", "multiplo_real"]]).mark_circle(size=12, color=S.GRIS_1, opacity=0.4).encode(
             x=alt.X("budget:Q", scale=S.escala_budget_log(), axis=S.eje_budget()),
-            y=alt.Y("multiplo_real:Q", scale=S.escala_multiplo_log(),
-                    axis=S.eje_multiplo("Recaudación / presupuesto (log)")))
+            y=alt.Y("multiplo_real:Q", scale=S.escala_multiplo_log(), axis=S.eje_multiplo("Recaudación / presupuesto (log)")))
         tu = pd.DataFrame({"budget": [budget], "multiplo": [multiplo], "bajo": [bajo], "alto": [alto],
-                           "t": [f"Tu película: {S.mult(multiplo)}"], "rango": [f"{S.mult(bajo)} a {S.mult(alto)}"]})
-        rango_tu = alt.Chart(tu).mark_rule(color=S.DORADO, strokeWidth=3).encode(
-            x="budget:Q", y=alt.Y("bajo:Q", scale=S.escala_multiplo_log()), y2="alto:Q",
-            tooltip=[alt.Tooltip("rango:N", title="Rango típico")])
-        rombo = alt.Chart(tu).mark_point(shape="diamond", filled=True, size=380, color=S.DORADO,
-                                         stroke=S.TINTA, strokeWidth=1.5).encode(
-            x="budget:Q", y=alt.Y("multiplo:Q", scale=S.escala_multiplo_log()),
-            tooltip=[alt.Tooltip("t:N", title=" "), alt.Tooltip("rango:N", title="Rango típico")])
-        texto_tu = alt.Chart(tu).mark_text(align="left", dx=14, fontSize=14, fontWeight="bold", color=S.DORADO).encode(
-            x="budget:Q", y=alt.Y("multiplo:Q", scale=S.escala_multiplo_log()), text="t:N")
-        linea1 = alt.Chart(pd.DataFrame({"y": [1]})).mark_rule(strokeDash=[4, 4], color=S.PISO).encode(
-            y=alt.Y("y:Q", scale=S.escala_multiplo_log()))
-        mostrar(alt.layer(fondo, linea1, rango_tu, rombo, texto_tu), alto=420)
-        st.caption("Los puntos grises son lo que recuperaron de verdad las películas del dataset. El rombo dorado es "
-                   "lo que el modelo predice para la tuya; la línea, su rango típico de error.")
+                           "t": [f"{S.mult(multiplo)}"], "rango": [f"{S.mult(bajo)} a {S.mult(alto)}"]})
+        capas = [fondo,
+                 alt.Chart(pd.DataFrame({"y": [1]})).mark_rule(strokeDash=[4, 4], color=S.TINTA_SUAVE).encode(
+                     y=alt.Y("y:Q", scale=S.escala_multiplo_log())),
+                 alt.Chart(tu).mark_rule(color=S.DORADO, strokeWidth=3).encode(
+                     x="budget:Q", y=alt.Y("bajo:Q", scale=S.escala_multiplo_log()), y2="alto:Q"),
+                 alt.Chart(tu).mark_point(shape="diamond", filled=True, size=420, color=S.DORADO, stroke=S.SUPERFICIE,
+                                          strokeWidth=1.5).encode(
+                     x="budget:Q", y=alt.Y("multiplo:Q", scale=S.escala_multiplo_log()),
+                     tooltip=[alt.Tooltip("t:N", title="Predicción"), alt.Tooltip("rango:N", title="Rango típico")]),
+                 alt.Chart(tu).mark_text(align="left", dx=14, fontSize=15, fontWeight="bold", color=S.DORADO).encode(
+                     x="budget:Q", y=alt.Y("multiplo:Q", scale=S.escala_multiplo_log()), text="t:N")]
+        if fila_real is not None:
+            rr = pd.DataFrame({"budget": [fila_real["budget"]], "m": [fila_real["multiplo_real"]],
+                               "t": [f"real {S.mult(fila_real['multiplo_real'])}"]})
+            capas += [alt.Chart(rr).mark_circle(size=200, color=S.REAL, opacity=1).encode(
+                          x="budget:Q", y=alt.Y("m:Q", scale=S.escala_multiplo_log())),
+                      alt.Chart(rr).mark_text(align="right", dx=-12, fontSize=13, fontWeight="bold", color=S.REAL).encode(
+                          x="budget:Q", y=alt.Y("m:Q", scale=S.escala_multiplo_log()), text="t:N")]
+        mostrar(alt.layer(*capas), alto=300)
+
+        # Gráfico: ¿y si cambia el presupuesto? (la misma película con 30 presupuestos distintos)
+        #  datos: 30 predicciones del modelo, cambiando solo el presupuesto (las columnas derivadas se recalculan)
+        #  mapeo: x = presupuesto (LOG), y = múltiplo predicho (LOG); marcas: línea violeta + rombo dorado en el actual
+        budgets = np.logspace(np.log10(max(num_r["budget"]["min"], 1e5)), np.log10(num_r["budget"]["max"]), 30)
+        curva_x, _ = armar_casos(base, budgets)
+        curva = pd.DataFrame({"budget": budgets, "multiplo": 10 ** modelo.predict(curva_x[E.FEATURES])})
+        curva["t"] = curva["multiplo"].map(lambda v: S.mult(v, 2))
+        curva["b"] = curva["budget"].map(S.usd_corto)
+        st.markdown("<p class='grafico-titulo' style='margin-top:.4rem'>¿Y si cambia el presupuesto?</p>"
+                    "<p class='grafico-bajada'>La misma película con otros presupuestos, según el modelo.</p>",
+                    unsafe_allow_html=True)
+        mostrar(alt.layer(
+            alt.Chart(curva).mark_line(color=S.MODELO, strokeWidth=3).encode(
+                x=alt.X("budget:Q", scale=alt.Scale(type="log"), axis=S.eje_budget()),
+                y=alt.Y("multiplo:Q", scale=alt.Scale(type="log", zero=False),
+                        axis=alt.Axis(title="Múltiplo predicho (log)", labelExpr=S.ETIQUETA_MULTIPLO,
+                                      values=[0.1, 0.3, 1, 3, 10, 30, 100, 300])),
+                tooltip=[alt.Tooltip("b:N", title="Presupuesto"), alt.Tooltip("t:N", title="Predicción")]),
+            alt.Chart(tu).mark_point(shape="diamond", filled=True, size=260, color=S.DORADO).encode(
+                x=alt.X("budget:Q", scale=alt.Scale(type="log")), y=alt.Y("multiplo:Q", scale=alt.Scale(type="log"))),
+        ), alto=150)
+        for a in avisos:
+            st.warning(a)
+        for n_ in notas:
+            st.caption("ℹ️ " + n_)
+
+
+with tab_proba:
+    proba_el_modelo()
+
 
 st.divider()
 st.caption("Proyecto integrador de Ciencia de Datos · UTN FRM 2026 · Grupo 5K10-06 · Datos: TMDb (este producto usa la "
