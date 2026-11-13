@@ -882,14 +882,13 @@ st.markdown(f"El **presupuesto** pesa {S.num(peso_budget, 1)} veces más que la 
 #         del múltiplo real y del predicho, y el MAE (error absoluto medio de log10) de ese año
 #  mapeo A: x = año, y = múltiplo mediano (lineal), color = real (gris) o predicción (violeta)
 #  mapeo B: x = año, y = factor de error 10^MAE, color = si el modelo ya había visto esas películas o no
-#  marcas: línea + punto (A), barras (B), regla vertical dorada en 2017 en los dos
+#  marcas: línea + punto (A), barras (B); reglas verticales: gris en 2017 (empieza el examen) y dorada en 2020
 anual = (P[P["release_year"] >= 1980].groupby("release_year")
          .agg(n=("y", "size"), real=("y", "median"), pred=("y_pred", "median"), mae=("error_abs", "mean"))
          .reset_index())
 anual["factor"] = 10 ** anual["mae"]
 anual["uno"] = 1.0  # las barras arrancan en ×1 (acertar siempre), no en 0
-anual["real"] = 10 ** anual["real"].rolling(3, center=True, min_periods=2).mean()
-anual["pred"] = 10 ** anual["pred"].rolling(3, center=True, min_periods=2).mean()
+anual["real"], anual["pred"] = 10 ** anual["real"], 10 ** anual["pred"]
 anual["etapa"] = np.where(anual["release_year"] < anios_test[0], "Ya las había visto",
                           "Examen (2017–2025)")
 anual["factor_txt"] = anual["factor"].map(lambda v: S.mult(v, 2))
@@ -897,52 +896,63 @@ anual["n_txt"] = anual["n"].map(lambda v: f"{S.num(v)} películas")
 largo_t = anual.melt(id_vars=["release_year", "n_txt"], value_vars=["real", "pred"], var_name="serie", value_name="mult")
 largo_t["serie"] = largo_t["serie"].map({"real": "Lo que recuperaron de verdad", "pred": "Lo que predijo el modelo"})
 largo_t["mult_txt"] = largo_t["mult"].map(lambda v: S.mult(v, 2))
-anio_stream = pd.DataFrame({"release_year": [anios_test[0]], "t": ["2017: despega el streaming"]})
+hitos = pd.DataFrame({"release_year": [anios_test[0], 2020], "t": ["empieza el examen", "pandemia y estrenos en streaming"],
+                      "color": [S.GRIS_2, S.DORADO], "lado": ["arriba", "abajo"], "mult": [4.5, 1.1]})
 x_t = alt.X("release_year:Q", title="Año de estreno", scale=alt.Scale(domain=[1980, 2025]),
             axis=alt.Axis(format="d", values=list(range(1980, 2026, 5)), labelExpr="datum.label"))
-regla_t = alt.Chart(anio_stream).mark_rule(color=S.DORADO, strokeDash=[5, 4], strokeWidth=2).encode(x=x_t)
-texto_t = alt.Chart(anio_stream).mark_text(align="right", dx=-6, dy=10, baseline="top", color=S.DORADO, fontSize=12.5,
-                                          fontWeight="bold").encode(x=x_t, y=alt.value(0), text="t:N")
+y_t = alt.Y("mult:Q", title="Cuántas veces recupera lo que costó (mediana)", scale=alt.Scale(domain=[1.1, 4.8], nice=False),
+            axis=alt.Axis(values=[1.5, 2, 2.5, 3, 3.5, 4, 4.5], labelExpr=S.ETIQUETA_MULTIPLO))
+regla_t = alt.Chart(hitos).mark_rule(strokeDash=[5, 4], strokeWidth=2).encode(
+    x=x_t, color=alt.Color("color:N", scale=None))
+texto_arriba = alt.Chart(hitos[hitos["lado"] == "arriba"]).mark_text(
+    align="right", dx=-6, dy=10, baseline="top", fontSize=12.5, fontWeight="bold").encode(
+    x=x_t, y=y_t, text="t:N", color=alt.Color("color:N", scale=None))
+texto_abajo = alt.Chart(hitos[hitos["lado"] == "abajo"]).mark_text(
+    align="right", dx=-6, dy=-8, baseline="bottom", fontSize=12.5, fontWeight="bold").encode(
+    x=x_t, y=y_t, text="t:N", color=alt.Color("color:N", scale=None))
 
-titulo_grafico("Antes y después de 2017: el modelo se separa de la realidad",
-               "Año por año (líneas: promedio móvil de 3 años), lo que recuperó la película mediana contra lo que predijo el modelo, y cuánto se "
-               "equivocó. Hasta 2016 son películas con las que el modelo aprendió; desde 2017 son las del examen.")
+titulo_grafico("Hasta 2019 las películas recuperaban cada vez más; desde 2020 recuperan menos y el modelo no se entera",
+               "Año por año: lo que recuperó la película mediana contra lo que predijo el modelo (izquierda) y cuánto se "
+               "equivocó (derecha). Hasta 2016 son películas con las que el modelo aprendió; desde 2017 son las del examen.")
 ct1, ct2 = st.columns(2, gap="large")
 with ct1:
     mostrar(alt.layer(
         alt.Chart(largo_t).mark_line(strokeWidth=2.6, point=alt.OverlayMarkDef(size=36, filled=True)).encode(
-            x=x_t, y=alt.Y("mult:Q", title="Cuántas veces recupera lo que costó (mediana)",
-                           scale=alt.Scale(domain=[1.4, 3.7], nice=False),
-                           axis=alt.Axis(values=[1.5, 2, 2.5, 3, 3.5], labelExpr=S.ETIQUETA_MULTIPLO)),
+            x=x_t, y=y_t,
             color=alt.Color("serie:N", scale=alt.Scale(domain=["Lo que recuperaron de verdad", "Lo que predijo el modelo"],
                                                        range=[S.TINTA_2, S.MODELO]), legend=alt.Legend(title=None)),
             tooltip=[alt.Tooltip("release_year:Q", title="Año", format="d"), alt.Tooltip("serie:N", title=""),
                      alt.Tooltip("mult_txt:N", title="Mediana"), alt.Tooltip("n_txt:N", title="Muestra")]),
-        regla_t, texto_t), alto=300)
+        regla_t, texto_arriba, texto_abajo), alto=300)
 with ct2:
     mostrar(alt.layer(
         alt.Chart(anual).mark_bar(cornerRadiusEnd=2, size=7).encode(
             x=alt.X("release_year:Q", title="Año de estreno", scale=alt.Scale(domain=[1980, 2025]),
                     axis=alt.Axis(format="d", values=list(range(1980, 2026, 5)), labelExpr="datum.label")),
             y2="uno:Q", y=alt.Y("factor:Q", title="Error típico (×1 = acierta siempre)",
-                    scale=alt.Scale(domain=[1, 3.6], nice=False),
-                    axis=alt.Axis(values=[1, 1.5, 2, 2.5, 3], labelExpr=S.ETIQUETA_MULTIPLO)),
+                    scale=alt.Scale(domain=[1, 4], nice=False),
+                    axis=alt.Axis(values=[1, 1.5, 2, 2.5, 3, 3.5], labelExpr=S.ETIQUETA_MULTIPLO)),
             color=alt.Color("etapa:N", scale=alt.Scale(domain=["Ya las había visto", "Examen (2017–2025)"],
                                                        range=[S.GRIS_1, S.DORADO]), legend=alt.Legend(title=None)),
             tooltip=[alt.Tooltip("release_year:Q", title="Año", format="d"), alt.Tooltip("factor_txt:N", title="Error típico"),
                      alt.Tooltip("n_txt:N", title="Muestra")]),
-        ), alto=300)
+        regla_t), alto=300)
+a_ = anual.set_index("release_year")
+pred_antes = a_.loc[2017:2019, "pred"]
 st.markdown(
-    f"**Hasta 2016 el modelo acompaña la tendencia; desde 2017 predice más de lo que las películas recuperan.** "
-    f"Con películas que no había visto al ajustarse (validación, 1988–2017) se equivoca {S.mult(fac(FIN['mae_cv']))}; "
-    f"en el examen {anios_test[0]}–{anios_test[1]}, {S.mult(FIN['factor_test'])}. El error sube, y justo en el año "
-    "en que las plataformas de streaming empiezan a ser el lugar donde se estrena una película: muchas ya no pasan por el "
-    "cine, o pasan unos días, y su recaudación en TMDb es mínima o inexistente. El modelo, entrenado con 100 años de "
-    "estrenos en sala, sigue esperando una taquilla que ya no llega.")
-st.caption(f"Es una pista, no una prueba: 2020 y 2021 (pandemia) caen en el mismo tramo, no hay forma de separar los "
-           f"dos efectos con estos datos, y el piso (adivinar la mediana) también empeora, de {S.mult(fac(FIN['mae_piso_cv']))} "
-           f"a {S.mult(FIN['factor_piso_test'])}. Antes de 2017 las barras son optimistas: el modelo ya había visto esas "
-           "películas.")
+    f"**Hasta 2019 la realidad sube y el modelo se queda en ×{S.num(pred_antes.min(), 1)} a ×{S.num(pred_antes.max(), 1)}: "
+    f"predice de menos. Desde 2020 la realidad cae por debajo y el modelo predice de más.** En 2020 la película mediana "
+    f"recuperó {S.mult(a_.loc[2020, 'real'])} y el modelo esperaba {S.mult(a_.loc[2020, 'pred'])}: el error de ese año "
+    f"es de {S.mult(a_.loc[2020, 'factor'])}, el más alto de la serie. Con películas que no había visto al ajustarse "
+    f"(validación, 1988–2017) el modelo se equivoca {S.mult(fac(FIN['mae_cv']))}; en el examen "
+    f"{anios_test[0]}–{anios_test[1]}, {S.mult(FIN['factor_test'])}. El error ya sube en 2017–2019, llega al pico en "
+    f"2020 y después baja, pero no vuelve a los niveles de antes ({S.mult(a_.loc[2022:2025, 'factor'].min(), 1)} a "
+    f"{S.mult(a_.loc[2022:2025, 'factor'].max(), 1)} entre 2022 y 2025). Ahí coinciden la pandemia y el paso de los "
+    "estrenos a las plataformas de streaming, donde la recaudación en TMDb es mínima o inexistente.")
+st.caption(f"Es una pista, no una prueba: la pandemia y el streaming caen en el mismo tramo y con estos datos no se pueden "
+           f"separar, y el piso (adivinar la mediana) también empeora, de {S.mult(fac(FIN['mae_piso_cv']))} a "
+           f"{S.mult(FIN['factor_piso_test'])}. Antes de 2017 el modelo ya había visto esas películas, así que tanto las "
+           "líneas como las barras de esos años son optimistas.")
 
 with como_lo_sabemos():
     st.markdown(f"""
