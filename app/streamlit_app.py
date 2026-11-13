@@ -468,7 +468,7 @@ st.markdown(
     f"que siguen en cines. Quedan **{S.num(n_alcance)}** ({S.pct(n_alcance / n_pedidas)} de lo pedido).")
 
 anios = P[P["release_year"] >= 1940].groupby(["release_year", "conjunto"]).size().reset_index(name="peliculas")
-anios["conjunto_es"] = anios["conjunto"].map({"entrenamiento": "Para aprender (hasta 2017)",
+anios["conjunto_es"] = anios["conjunto"].map({"entrenamiento": "Para aprender (hasta 2016)",
                                               "test": f"Examen final ({anios_test[0]}–{anios_test[1]})"})
 titulo_grafico("De qué época son",
                "La mayoría es de 1990 en adelante. Las más nuevas se guardan aparte desde el principio: son el examen "
@@ -701,7 +701,7 @@ st.divider()
 seccion("modelo", "3 · El modelo",
         f"En películas que nunca vio, el modelo se equivoca un {S.pct(FIN['mejora_test_pct'], 1)} menos que adivinar: "
         "acierta con las normales y falla en las puntas",
-        "Aprendió con las películas hasta 2017 y lo medimos una sola vez, al final, con las de 2017 a 2025. Le gana "
+        "Aprendió con las películas hasta 2016 y lo medimos una sola vez, al final, con las de 2017 a 2025. Le gana "
         "a adivinar, pero el margen sigue siendo grande.")
 
 c1, c2 = st.columns([1, 1.25], gap="large")
@@ -878,12 +878,12 @@ st.markdown(f"El **presupuesto** pesa {S.num(peso_budget, 1)} veces más que la 
 
 # Gráfico: el modelo a lo largo del tiempo, antes y después de 2017 (arranque del streaming).
 #  datos: predicciones.parquet (las 6.391 del alcance; hasta 2016 son películas con las que el modelo aprendió)
-#  transformación: por año de estreno desde 1980 (antes hay menos de 100 películas por año) se toma la mediana
+#  transformación: por año de estreno desde 2000 (antes hay menos de 140 películas por año) se toma la mediana
 #         del múltiplo real y del predicho, y el MAE (error absoluto medio de log10) de ese año
 #  mapeo A: x = año, y = múltiplo mediano (lineal), color = real (gris) o predicción (violeta)
 #  mapeo B: x = año, y = factor de error 10^MAE, color = si el modelo ya había visto esas películas o no
 #  marcas: línea + punto (A), barras (B); reglas verticales: gris en 2017 (empieza el examen) y dorada en 2020
-anual = (P[P["release_year"] >= 1980].groupby("release_year")
+anual = (P[P["release_year"] >= 2000].groupby("release_year")
          .agg(n=("y", "size"), real=("y", "median"), pred=("y_pred", "median"), mae=("error_abs", "mean"))
          .reset_index())
 anual["factor"] = 10 ** anual["mae"]
@@ -897,21 +897,21 @@ largo_t = anual.melt(id_vars=["release_year", "n_txt"], value_vars=["real", "pre
 largo_t["serie"] = largo_t["serie"].map({"real": "Lo que recuperaron de verdad", "pred": "Lo que predijo el modelo"})
 largo_t["mult_txt"] = largo_t["mult"].map(lambda v: S.mult(v, 2))
 hitos = pd.DataFrame({"release_year": [anios_test[0], 2020], "t": ["empieza el examen", "pandemia y estrenos en streaming"],
-                      "color": [S.GRIS_2, S.DORADO], "lado": ["arriba", "abajo"], "mult": [4.5, 1.1]})
-x_t = alt.X("release_year:Q", title="Año de estreno", scale=alt.Scale(domain=[1980, 2025]),
-            axis=alt.Axis(format="d", values=list(range(1980, 2026, 5)), labelExpr="datum.label"))
-y_t = alt.Y("mult:Q", title="Cuántas veces recupera lo que costó (mediana)", scale=alt.Scale(domain=[1.1, 4.8], nice=False),
-            axis=alt.Axis(values=[1.5, 2, 2.5, 3, 3.5, 4, 4.5], labelExpr=S.ETIQUETA_MULTIPLO))
-regla_t = alt.Chart(hitos).mark_rule(strokeDash=[5, 4], strokeWidth=2).encode(
-    x=x_t, color=alt.Color("color:N", scale=None))
-texto_arriba = alt.Chart(hitos[hitos["lado"] == "arriba"]).mark_text(
-    align="right", dx=-6, dy=10, baseline="top", fontSize=12.5, fontWeight="bold").encode(
-    x=x_t, y=y_t, text="t:N", color=alt.Color("color:N", scale=None))
-texto_abajo = alt.Chart(hitos[hitos["lado"] == "abajo"]).mark_text(
-    align="right", dx=-6, dy=-8, baseline="bottom", fontSize=12.5, fontWeight="bold").encode(
-    x=x_t, y=y_t, text="t:N", color=alt.Color("color:N", scale=None))
+                      "color": [S.GRIS_2, S.DORADO], "mult": [3.95, 3.65], "desde": [1.1, 1.1], "hasta": [3.45, 3.45]})
+x_t = alt.X("release_year:Q", title="Año de estreno", scale=alt.Scale(domain=[2000, 2025]),
+            axis=alt.Axis(format="d", values=list(range(2000, 2026, 5)), labelExpr="datum.label"))
+ESC_Y_T = alt.Scale(domain=[1.1, 4.2], nice=False)
+EJE_Y_T = alt.Axis(values=[1.5, 2, 2.5, 3, 3.5, 4], labelExpr=S.ETIQUETA_MULTIPLO)
+TIT_Y_T = "Cuántas veces recupera lo que costó (mediana)"
+y_t = alt.Y("mult:Q", title=TIT_Y_T, scale=ESC_Y_T, axis=EJE_Y_T)
+color_hito = alt.Color("color:N", scale=None)
+regla_t = alt.Chart(hitos).mark_rule(strokeDash=[5, 4], strokeWidth=2).encode(x=x_t, color=color_hito)
+regla_corta = alt.Chart(hitos).mark_rule(strokeDash=[5, 4], strokeWidth=2).encode(
+    x=x_t, y=alt.Y("desde:Q", title=TIT_Y_T, scale=ESC_Y_T, axis=EJE_Y_T), y2="hasta:Q", color=color_hito)
+texto_t = alt.Chart(hitos).mark_text(align="right", dx=-6, baseline="middle", fontSize=12.5, fontWeight="bold").encode(
+    x=x_t, y=y_t, text="t:N", color=color_hito)
 
-titulo_grafico("Hasta 2019 las películas recuperaban cada vez más; desde 2020 recuperan menos y el modelo no se entera",
+titulo_grafico("De 2000 a 2019 las películas recuperaban cada vez más; desde 2020 recuperan menos y el modelo no se entera",
                "Año por año: lo que recuperó la película mediana contra lo que predijo el modelo (izquierda) y cuánto se "
                "equivocó (derecha). Hasta 2016 son películas con las que el modelo aprendió; desde 2017 son las del examen.")
 ct1, ct2 = st.columns(2, gap="large")
@@ -923,12 +923,11 @@ with ct1:
                                                        range=[S.TINTA_2, S.MODELO]), legend=alt.Legend(title=None)),
             tooltip=[alt.Tooltip("release_year:Q", title="Año", format="d"), alt.Tooltip("serie:N", title=""),
                      alt.Tooltip("mult_txt:N", title="Mediana"), alt.Tooltip("n_txt:N", title="Muestra")]),
-        regla_t, texto_arriba, texto_abajo), alto=300)
+        regla_corta, texto_t), alto=300)
 with ct2:
     mostrar(alt.layer(
-        alt.Chart(anual).mark_bar(cornerRadiusEnd=2, size=7).encode(
-            x=alt.X("release_year:Q", title="Año de estreno", scale=alt.Scale(domain=[1980, 2025]),
-                    axis=alt.Axis(format="d", values=list(range(1980, 2026, 5)), labelExpr="datum.label")),
+        alt.Chart(anual).mark_bar(cornerRadiusEnd=2, size=11).encode(
+            x=x_t,
             y2="uno:Q", y=alt.Y("factor:Q", title="Error típico (×1 = acierta siempre)",
                     scale=alt.Scale(domain=[1, 4], nice=False),
                     axis=alt.Axis(values=[1, 1.5, 2, 2.5, 3, 3.5], labelExpr=S.ETIQUETA_MULTIPLO)),
@@ -940,7 +939,7 @@ with ct2:
 a_ = anual.set_index("release_year")
 pred_antes = a_.loc[2017:2019, "pred"]
 st.markdown(
-    f"**Hasta 2019 la realidad sube y el modelo se queda en ×{S.num(pred_antes.min(), 1)} a ×{S.num(pred_antes.max(), 1)}: "
+    f"**De 2000 a 2019 la realidad sube y el modelo se queda en ×{S.num(pred_antes.min(), 1)} a ×{S.num(pred_antes.max(), 1)}: "
     f"predice de menos. Desde 2020 la realidad cae por debajo y el modelo predice de más.** En 2020 la película mediana "
     f"recuperó {S.mult(a_.loc[2020, 'real'])} y el modelo esperaba {S.mult(a_.loc[2020, 'pred'])}: el error de ese año "
     f"es de {S.mult(a_.loc[2020, 'factor'])}, el más alto de la serie. Con películas que no había visto al ajustarse "
@@ -1064,7 +1063,7 @@ una fórmula corta que se pueda escribir dentro de una página. Streamlit corre 
 desvío de la diferencia: preferimos mostrar el modelo que defendemos.
 """)
 
-pase("El modelo achata las puntas. <b>¿Qué hicimos después de la Entrega 3 para mejorarlo?</b>")
+pase("El modelo achata las puntas y no se adaptó a lo que cambió en 2020. <b>¿Qué hicimos después de la Entrega 3 para mejorarlo?</b>")
 st.divider()
 
 # =============================================================================================
@@ -1174,7 +1173,8 @@ escala_res = alt.Scale(domain=["Mejora", "Empata (ruido)", "Empeora", "Mejora, p
 y_pc = alt.Y("nombre:N", sort=list(pc["nombre"]), title=None, axis=alt.Axis(labelLimit=300, labelFontSize=12.5))
 mostrar(alt.layer(
     alt.Chart(pc).mark_bar(height=22, cornerRadius=3, stroke=S.TINTA_SUAVE, strokeWidth=0.6).encode(
-        x=alt.X("mejora:Q", title="Mejora del error contra la referencia (MAE). Positivo = se equivoca menos"), y=y_pc,
+        x=alt.X("mejora:Q", title="Mejora del error contra la referencia (MAE). Positivo = se equivoca menos",
+                axis=alt.Axis(values=[-0.04, -0.03, -0.02, -0.01, 0, 0.01, 0.02])), y=y_pc,
         color=alt.Color("resultado:N", scale=escala_res, legend=alt.Legend(title=None, orient="top")),
         tooltip=[alt.Tooltip("prueba:N", title="Prueba"), alt.Tooltip("que_es:N", title="Qué hace"),
                  alt.Tooltip("txt:N", title="Mejora"), alt.Tooltip("cortes_gana:N", title="Cortes en que gana")]),
