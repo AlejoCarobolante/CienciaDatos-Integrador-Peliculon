@@ -99,8 +99,8 @@ st.markdown(f"""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;750;850&display=swap');
 html, body, .stMarkdown p, .stMarkdown li, h1, h2, h3 {{font-family: Inter, system-ui, sans-serif;}}
 .block-container {{max-width: 1200px; padding-top: 2rem;}}
-div[data-testid="stMarkdownContainer"] p.kicker, .kicker {{font-size: .8rem; font-weight: 750; letter-spacing: .16em;
-    text-transform: uppercase; color: {S.DORADO}; margin: 0 0 .35rem 0;}}
+div[data-testid="stMarkdownContainer"] p.kicker, .kicker {{font-size: 1.35rem; font-weight: 800; letter-spacing: .1em;
+    text-transform: uppercase; color: {S.DORADO}; margin: 0 0 .5rem 0;}}
 div[data-testid="stMarkdownContainer"] p.titulo-seccion, .titulo-seccion {{font-size: 2.15rem; line-height: 1.15;
     font-weight: 850; color: {S.TINTA}; margin: 0 0 .7rem 0; letter-spacing: -.01em;}}
 div[data-testid="stMarkdownContainer"] p.bajada, .bajada {{font-size: 1.1rem; color: {S.TINTA_2}; margin-bottom: 1.3rem;
@@ -113,7 +113,17 @@ div[data-testid="stMarkdownContainer"] p.grafico-bajada, .grafico-bajada {{font-
     background: radial-gradient(1200px 400px at 85% -10%, rgba(165,148,255,.28), transparent 60%),
                 radial-gradient(800px 300px at -10% 110%, rgba(255,200,87,.16), transparent 60%), {S.PANEL};
     border: 1px solid {S.GRILLA};}}
-.hero .kicker {{margin-bottom: .6rem;}}
+div[data-testid="stMarkdownContainer"] .hero p.kicker {{font-size: .9rem; letter-spacing: .16em; margin-bottom: .6rem;}}
+section[data-testid="stSidebar"] {{border-right: 1px solid {S.GRILLA};}}
+section[data-testid="stSidebar"] h3 {{font-size: .8rem; font-weight: 750; letter-spacing: .16em; text-transform: uppercase;
+    color: {S.DORADO}; padding: .4rem 0 .2rem .3rem;}}
+section[data-testid="stSidebar"] ul {{list-style: none; padding: 0; margin: 0;}}
+section[data-testid="stSidebar"] li {{margin: 0 0 .15rem 0;}}
+section[data-testid="stSidebar"] li a {{display: block; padding: .5rem .8rem; border-radius: 10px; font-size: 1rem;
+    font-weight: 600; color: {S.TINTA_2}; text-decoration: none; border-left: 3px solid transparent;
+    transition: background .15s, color .15s, border-color .15s;}}
+section[data-testid="stSidebar"] li a:hover {{background: {S.PANEL}; color: {S.TINTA}; border-left-color: {S.DORADO};}}
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {{padding: 0 .3rem; line-height: 1.5;}}
 .hero h1 {{font-size: 3.1rem; line-height: 1.06; font-weight: 850; letter-spacing: -.02em; color: {S.TINTA}; margin: 0 0 1rem 0;
     padding: 0;}}
 .hero h1 span {{background: linear-gradient(90deg, {S.MODELO}, {S.DORADO}); -webkit-background-clip: text;
@@ -865,6 +875,74 @@ mostrar(alt.layer(
 st.markdown(f"El **presupuesto** pesa {S.num(peso_budget, 1)} veces más que la segunda columna. Atrás vienen la "
             "combinación de director y protagonista conocidos y **cómo les fue antes a las películas de la saga**, una "
             "de las columnas nuevas (sección 4).")
+
+# Gráfico: el modelo a lo largo del tiempo, antes y después de 2017 (arranque del streaming).
+#  datos: predicciones.parquet (las 6.391 del alcance; hasta 2016 son películas con las que el modelo aprendió)
+#  transformación: por año de estreno desde 1980 (antes hay menos de 100 películas por año) se toma la mediana
+#         del múltiplo real y del predicho, y el MAE (error absoluto medio de log10) de ese año
+#  mapeo A: x = año, y = múltiplo mediano (lineal), color = real (gris) o predicción (violeta)
+#  mapeo B: x = año, y = factor de error 10^MAE, color = si el modelo ya había visto esas películas o no
+#  marcas: línea + punto (A), barras (B), regla vertical dorada en 2017 en los dos
+anual = (P[P["release_year"] >= 1980].groupby("release_year")
+         .agg(n=("y", "size"), real=("y", "median"), pred=("y_pred", "median"), mae=("error_abs", "mean"))
+         .reset_index())
+anual["factor"] = 10 ** anual["mae"]
+anual["uno"] = 1.0  # las barras arrancan en ×1 (acertar siempre), no en 0
+anual["real"] = 10 ** anual["real"].rolling(3, center=True, min_periods=2).mean()
+anual["pred"] = 10 ** anual["pred"].rolling(3, center=True, min_periods=2).mean()
+anual["etapa"] = np.where(anual["release_year"] < anios_test[0], "Ya las había visto",
+                          "Examen (2017–2025)")
+anual["factor_txt"] = anual["factor"].map(lambda v: S.mult(v, 2))
+anual["n_txt"] = anual["n"].map(lambda v: f"{S.num(v)} películas")
+largo_t = anual.melt(id_vars=["release_year", "n_txt"], value_vars=["real", "pred"], var_name="serie", value_name="mult")
+largo_t["serie"] = largo_t["serie"].map({"real": "Lo que recuperaron de verdad", "pred": "Lo que predijo el modelo"})
+largo_t["mult_txt"] = largo_t["mult"].map(lambda v: S.mult(v, 2))
+anio_stream = pd.DataFrame({"release_year": [anios_test[0]], "t": ["2017: despega el streaming"]})
+x_t = alt.X("release_year:Q", title="Año de estreno", scale=alt.Scale(domain=[1980, 2025]),
+            axis=alt.Axis(format="d", values=list(range(1980, 2026, 5)), labelExpr="datum.label"))
+regla_t = alt.Chart(anio_stream).mark_rule(color=S.DORADO, strokeDash=[5, 4], strokeWidth=2).encode(x=x_t)
+texto_t = alt.Chart(anio_stream).mark_text(align="right", dx=-6, dy=10, baseline="top", color=S.DORADO, fontSize=12.5,
+                                          fontWeight="bold").encode(x=x_t, y=alt.value(0), text="t:N")
+
+titulo_grafico("Antes y después de 2017: el modelo se separa de la realidad",
+               "Año por año (líneas: promedio móvil de 3 años), lo que recuperó la película mediana contra lo que predijo el modelo, y cuánto se "
+               "equivocó. Hasta 2016 son películas con las que el modelo aprendió; desde 2017 son las del examen.")
+ct1, ct2 = st.columns(2, gap="large")
+with ct1:
+    mostrar(alt.layer(
+        alt.Chart(largo_t).mark_line(strokeWidth=2.6, point=alt.OverlayMarkDef(size=36, filled=True)).encode(
+            x=x_t, y=alt.Y("mult:Q", title="Cuántas veces recupera lo que costó (mediana)",
+                           scale=alt.Scale(domain=[1.4, 3.7], nice=False),
+                           axis=alt.Axis(values=[1.5, 2, 2.5, 3, 3.5], labelExpr=S.ETIQUETA_MULTIPLO)),
+            color=alt.Color("serie:N", scale=alt.Scale(domain=["Lo que recuperaron de verdad", "Lo que predijo el modelo"],
+                                                       range=[S.TINTA_2, S.MODELO]), legend=alt.Legend(title=None)),
+            tooltip=[alt.Tooltip("release_year:Q", title="Año", format="d"), alt.Tooltip("serie:N", title=""),
+                     alt.Tooltip("mult_txt:N", title="Mediana"), alt.Tooltip("n_txt:N", title="Muestra")]),
+        regla_t, texto_t), alto=300)
+with ct2:
+    mostrar(alt.layer(
+        alt.Chart(anual).mark_bar(cornerRadiusEnd=2, size=7).encode(
+            x=alt.X("release_year:Q", title="Año de estreno", scale=alt.Scale(domain=[1980, 2025]),
+                    axis=alt.Axis(format="d", values=list(range(1980, 2026, 5)), labelExpr="datum.label")),
+            y2="uno:Q", y=alt.Y("factor:Q", title="Error típico (×1 = acierta siempre)",
+                    scale=alt.Scale(domain=[1, 3.6], nice=False),
+                    axis=alt.Axis(values=[1, 1.5, 2, 2.5, 3], labelExpr=S.ETIQUETA_MULTIPLO)),
+            color=alt.Color("etapa:N", scale=alt.Scale(domain=["Ya las había visto", "Examen (2017–2025)"],
+                                                       range=[S.GRIS_1, S.DORADO]), legend=alt.Legend(title=None)),
+            tooltip=[alt.Tooltip("release_year:Q", title="Año", format="d"), alt.Tooltip("factor_txt:N", title="Error típico"),
+                     alt.Tooltip("n_txt:N", title="Muestra")]),
+        ), alto=300)
+st.markdown(
+    f"**Hasta 2016 el modelo acompaña la tendencia; desde 2017 predice más de lo que las películas recuperan.** "
+    f"Con películas que no había visto al ajustarse (validación, 1988–2017) se equivoca {S.mult(fac(FIN['mae_cv']))}; "
+    f"en el examen {anios_test[0]}–{anios_test[1]}, {S.mult(FIN['factor_test'])}. El error sube, y justo en el año "
+    "en que las plataformas de streaming empiezan a ser el lugar donde se estrena una película: muchas ya no pasan por el "
+    "cine, o pasan unos días, y su recaudación en TMDb es mínima o inexistente. El modelo, entrenado con 100 años de "
+    "estrenos en sala, sigue esperando una taquilla que ya no llega.")
+st.caption(f"Es una pista, no una prueba: 2020 y 2021 (pandemia) caen en el mismo tramo, no hay forma de separar los "
+           f"dos efectos con estos datos, y el piso (adivinar la mediana) también empeora, de {S.mult(fac(FIN['mae_piso_cv']))} "
+           f"a {S.mult(FIN['factor_piso_test'])}. Antes de 2017 las barras son optimistas: el modelo ya había visto esas "
+           "películas.")
 
 with como_lo_sabemos():
     st.markdown(f"""
