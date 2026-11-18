@@ -5,13 +5,30 @@ Proyecto integrador de Ciencia de Datos · UTN FRM 2026.
 **La pregunta:** con lo que se sabe *antes del estreno* (presupuesto, género, idioma, duración, productora, director,
 elenco, saga y fecha), ¿podemos anticipar cuántas veces recupera una película lo que costó?
 
-**El hallazgo:** sí, pero poco. En películas de 2017–2025 que nunca vio, el modelo (el promedio de un Random Forest
-ajustado, HistGB y Ridge) anticipa el múltiplo `recaudación / presupuesto` con un error típico de **×2,67**, un
-**13,5%** menos que adivinar siempre la mediana (×3,11). En la Entrega 3 era ×2,87 (7% menos): la mejora vino de
-sumar director, actor, saga, palabras clave y países, que se conocen antes del estreno. Lo que más pesa es el presupuesto: las películas baratas multiplican mucho más lo que
-cuestan (mediana ×18 con menos de 1 millón de dólares, ×2 entre 10 y 100 millones).
+**El hallazgo, en una oración:** sí, pero poco: con lo que se sabe antes del estreno, el modelo se equivoca un 13,5%
+menos que adivinar y casi nunca anticipa que una película va a perder plata.
+
+Los números que lo sostienen, en las 1.278 películas del examen final (estrenadas de 2017 a 2025, que el modelo nunca
+vio; aprendió con las estrenadas hasta enero de 2017):
+
+- **Error típico ×2,67.** El modelo (el promedio de un Random Forest ajustado, HistGB y Ridge) anticipa el múltiplo
+  `recaudación / presupuesto` con un error de ×2,67 para arriba o para abajo, contra ×3,11 de adivinar siempre la
+  mediana: **13,5% menos**. En la Entrega 3 era ×2,87 (7% menos); la mejora vino de sumar director, actor, saga,
+  palabras clave y países, que se conocen antes del estreno.
+- **Pérdidas anticipadas: 20 de 347.** De las películas del examen que perdieron plata, solo a 20 les predijo pérdida.
+  A la típica del grupo, que recuperó ×0,42, le predijo ×1,65. El modelo «achata»: predice todo cerca del medio.
+- **Lo que más pesa es el presupuesto:** las películas baratas multiplican mucho más lo que cuestan (mediana ×18 con
+  menos de 1 millón de dólares, ×2 entre 10 y 100 millones), pero también se desparraman más.
+
+ROI y múltiplo son lo mismo dicho de dos formas: ROI = múltiplo − 1 (×2 = ROI de 100%).
 
 **App:** https://cienciadatos-integrador-peliculon.streamlit.app
+
+Está armada como una copa de martini: una portada con la pregunta, la respuesta y tres números; un tallo de cuatro
+secciones (los datos, lo que encontramos, el modelo y cómo lo mejoramos), cada una con un título que afirma, sus
+gráficos y un «Cómo lo sabemos» con la evidencia técnica; y una copa para explorar las películas y probar el modelo
+con un caso propio. La barra lateral tiene un glosario. Todos los gráficos son Altair; los colores tienen un único
+significado en toda la app y están documentados en `app/estilo.py`.
 
 ---
 
@@ -113,7 +130,15 @@ el que imprimió el notebook:
 MAE test notebook = 0.4267 | MAE test build_app = 0.4267
 ```
 
-Si no coinciden, el script falla. **Si cambian los datos:** correr el DAG, ejecutar `presentacion3.ipynb` (paso 2) y
+Si no coinciden, el script falla.
+
+**Qué CSV usa:** el script toma el `movies_<fecha>.csv` más reciente de `include/output/` (carpeta que no se sube al
+repo), y solo si no hay ninguno usa `include/frozen/ultimo_ok.csv`. Si el más reciente es una corrida en modo
+`subset` (unas 120 películas), se detiene con un error («parece una corrida en modo subset»). **Para regenerar con
+los datos de la app publicada, mover todos los `movies_*.csv` de `include/output/` a otra carpeta**: así usa el
+congelado. Si queda alguna corrida completa vieja, la toma a ella y el resultado cambia.
+
+**Si cambian los datos:** correr el DAG, ejecutar `presentacion3.ipynb` (paso 2) y
 después `python build_app.py`. Commitear `presentacion3.ipynb` y `app/artefactos/`: Streamlit Cloud no corre ni el DAG
 ni el entrenamiento, solo lee los artefactos.
 
