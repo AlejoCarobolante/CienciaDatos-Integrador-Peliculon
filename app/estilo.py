@@ -1,11 +1,16 @@
 """Colores, escalas y formatos de toda la app, definidos en un solo lugar.
 
-Regla: un color significa lo mismo en todos los gráficos (tallo y copa).
-- Roles del modelo: violeta = el modelo final y lo que predice; tinta gris oscura = el valor real;
-  gris medio punteado = el piso (adivinar la mediana); gris claro = los otros modelos.
-- Error del modelo (divergente): azul = predijo de menos (éxito no anticipado),
-  rojo = predijo de más (fracaso no anticipado), gris = acertó.
-- Géneros: solo tres tienen color (los que pasan el control de daltonismo entre todos los pares
+Regla: un color significa lo mismo en todos los gráficos (tallo y copa). Cada color tiene UN papel:
+- Violeta (MODELO): el modelo final, lo que predice y lo que se le agregó.
+- Crema (REAL): lo que pasó de verdad (recaudación, múltiplo real, la mediana real de un grupo).
+- Dorado (SENALADOR): una película puntual que se nombra (las famosas, la tuya en «Probá»). Nada más.
+- Verdes (RESULTADO): qué le pasó a una película, de perder plata (gris) a multiplicar más de ×11.
+- Azul / rojo (ERROR_MENOS / ERROR_MAS): el error del modelo. Azul = predijo de menos (le fue mejor de lo
+  anticipado); rojo = predijo de más (le fue peor). El rojo no se usa para otra cosa.
+- Grises: contexto, nunca el protagonista. GRIS_1 = el piso (adivinar) y lo que el modelo ya vio al aprender
+  (ENTRENAMIENTO); GRIS_3 = el examen (EXAMEN) y los otros modelos; GRIS_2 = valores intermedios.
+- Línea punteada TINTA_SUAVE: referencias fijas (×1 = recupera justo lo que costó, hitos en el tiempo).
+- Géneros (solo en «Explorá»): tres con color propio (pasan el control de daltonismo entre todos los pares
   de un scatter); el resto va en gris como «Otros».
 Paleta validada con el script de la guía de visualización (modo claro, superficie #fcfcfb).
 """
@@ -29,8 +34,15 @@ FUENTE = "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif"
 # --- Roles del modelo -------------------------------------------------------------------------
 MODELO = "#a594ff"      # modelo final / predicho
 REAL = "#e9e5d8"        # valor real
-PISO = TINTA_SUAVE      # piso: mediana
-OTROS_MODELOS = EJE     # Ridge, RF sin ajustar, HistGB
+PISO = GRIS_1           # piso: adivinar siempre la mediana
+OTROS_MODELOS = GRIS_3  # Ridge, RF sin ajustar, HistGB
+SENALADOR = DORADO      # una película puntual que se nombra (famosas, la del usuario)
+REFERENCIA = TINTA_SUAVE  # líneas fijas: ×1, hitos
+ENTRENAMIENTO = GRIS_1  # películas con las que el modelo aprendió
+EXAMEN = GRIS_3         # películas del examen final (el modelo nunca las vio)
+
+# --- Resultado de una película (ordinal: de perder plata a multiplicar más de ×11) ------------
+RESULTADO_COLORES = ["#6b6878", "#24493b", "#2f7a57", "#47b47d", "#82f2ad"]
 
 # --- Error del modelo (divergente azul <-> rojo, gris al medio) ------------------------------
 ERROR_MENOS = "#4ea8ff"  # predijo de menos: le fue mejor de lo anticipado
