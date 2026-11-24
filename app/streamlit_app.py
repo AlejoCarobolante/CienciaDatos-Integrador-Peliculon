@@ -325,7 +325,7 @@ st.markdown(f"""
   {S.mult(10 ** FIN['mediana_piso_y'])}, sin mirar ningún dato) y casi nunca anticipa que una película va a
   <b>perder plata</b>.</p>
   <p class='contexto'>Lo medimos con {S.num(n_alcance)} películas de TMDb: el modelo aprendió con las estrenadas hasta
-  {CORTE} y lo examinamos con las {S.num(M['particion']['n_test'])} siguientes, que nunca había visto.</p>
+  {CORTE} y lo evaluamos con las {S.num(M['particion']['n_test'])} siguientes, que nunca había visto.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1314,7 +1314,7 @@ mostrar(alt.layer(
         fill=alt.Fill("resultado:N", scale=relleno_res, legend=alt.Legend(title=None, orient="top")),
         stroke=alt.Stroke("resultado:N", scale=borde_res, legend=alt.Legend(title=None, orient="top")),
         strokeDash=alt.condition(alt.datum.resultado == DOM_RES[3], alt.value([4, 3]), alt.value([1, 0])),
-        tooltip=[alt.Tooltip("prueba:N", title="Prueba"), alt.Tooltip("que_es:N", title="Qué hace"),
+        tooltip=[alt.Tooltip("prueba:N", title="Estrategia"), alt.Tooltip("que_es:N", title="Qué hace"),
                  alt.Tooltip("txt:N", title="Mejora"), alt.Tooltip("cortes_gana:N", title="Cortes en que gana")]),
     alt.Chart(pc).mark_rule(color=S.TINTA_2).encode(x="lo:Q", x2="hi:Q", y=y_pc),
     alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(color=S.TINTA).encode(x="x:Q"),
@@ -1365,7 +1365,7 @@ En la validación, la mejora es {S.num(CTX['mejora_cv']['media'], 4)} con un des
 corrección. Se muestra como dato histórico.
 """)
     st.dataframe(pd.DataFrame({
-        "Prueba": pd.DataFrame(M["pruebas_correccion"])["prueba"],
+        "Estrategia": pd.DataFrame(M["pruebas_correccion"])["prueba"],
         "Qué hace": pd.DataFrame(M["pruebas_correccion"])["que_es"],
         "MAE": pd.DataFrame(M["pruebas_correccion"])["mae_cv"].map(lambda v: S.num(v, 4)),
         "R²": pd.DataFrame(M["pruebas_correccion"])["r2_cv"].map(lambda v: S.num(v, 3)),
