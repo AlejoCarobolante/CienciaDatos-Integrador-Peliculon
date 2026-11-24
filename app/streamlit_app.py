@@ -1258,6 +1258,19 @@ st.markdown(
     "mejora tan chica que queda dentro del ruido; el promedio se eligió como modelo final por estabilidad.")
 
 st.markdown("<p class='camino'>Camino 2: darle más información</p>", unsafe_allow_html=True)
+st.markdown("""
+<div class='tarjetas' style='grid-template-columns: 1fr;'>
+  <div class='tarjeta'><div class='rotulo'>Qué datos agregamos</div>
+    <div class='nota' style='margin-top: .5rem;'>
+      <b>Historia del director y del actor:</b> cómo les fue antes a sus películas (director y actor principal).<br>
+      <b>Historia de la saga y si es secuela:</b> si es secuela y cómo les fue a las anteriores de la saga.<br>
+      <b>De qué se trata (palabras clave):</b> si está basada en un libro, un cómic o una historia real, si es un remake, un
+      videojuego, un musical, de Navidad o de found footage.<br>
+      <b>Países que la producen:</b> de qué países es: cuántos la producen y si uno es EE. UU.<br>
+      <b>Todos se conocen antes del estreno.</b></div></div>
+</div>
+""", unsafe_allow_html=True)
+
 recorrido = pd.DataFrame([
     {"etapa": "Piso (siempre la mediana)", "factor": FIN["factor_piso_test"], "rol": "Piso"},
     {"etapa": "Entrega 3 (lo que presentamos)", "factor": E3["factor_test"], "rol": "Antes"},
