@@ -109,6 +109,8 @@ div[data-testid="stMarkdownContainer"] p.grafico-titulo, .grafico-titulo {{font-
     color: {S.TINTA}; margin: 1.6rem 0 .15rem 0;}}
 div[data-testid="stMarkdownContainer"] p.grafico-bajada, .grafico-bajada {{font-size: .93rem; color: {S.TINTA_2};
     margin: 0 0 .4rem 0;}}
+div[data-testid="stMarkdownContainer"] p.camino, .camino {{font-size: 1.5rem; font-weight: 800; color: {S.TINTA};
+    border-left: 4px solid {S.MODELO}; padding-left: .8rem; margin: 2.6rem 0 .2rem 0; letter-spacing: -.01em;}}
 .hero {{position: relative; border-radius: 22px; padding: 2.4rem 2.4rem 1.6rem 2.4rem; margin-bottom: .6rem;
     background: radial-gradient(1200px 400px at 85% -10%, rgba(165,148,255,.28), transparent 60%),
                 radial-gradient(800px 300px at -10% 110%, rgba(255,200,87,.16), transparent 60%), {S.PANEL};
@@ -1210,6 +1212,52 @@ seccion("mejora", "4 · Cómo lo mejoramos",
         "mediana y empeoraba. Lo que funcionó fue sumar datos que se conocen antes del estreno: quién la dirige, quién "
         "actúa, si es secuela y cómo le fue a la saga, de qué trata y de dónde es.")
 
+st.markdown("<p class='camino'>Camino 1: con los mismos datos, cambiar el modelo</p>", unsafe_allow_html=True)
+pc = pd.DataFrame(M["pruebas_correccion"]).iloc[1:].copy()
+pc["nombre"] = pc["prueba"].map({
+    "Promedio de 3 modelos (el final)": "Promediar 3 modelos (el final)",
+    "Pérdida Huber (GradientBoosting)": "Pérdida Huber",
+    "Estirar las predicciones ×1,5": "Estirar las predicciones ×1,5",
+    "Más peso a los casos extremos": "Más peso a los extremos al aprender",
+    "+ «pertenece a una saga» (trampa)": "«Pertenece a una saga» (trampa)"})
+pc["resultado"] = np.select([pc["prueba"].str.contains("trampa"), pc["supera_ruido"], pc["mejora"] < 0],
+                            ["Mejora, pero es trampa", "Mejora", "Empeora"], "Empata (ruido)")
+pc.loc[(pc["mejora"] > 0) & ~pc["supera_ruido"] & ~pc["prueba"].str.contains("trampa"), "resultado"] = "Empata (ruido)"
+pc["lo"], pc["hi"] = pc["mejora"] - pc["desvio_mejora"], pc["mejora"] + pc["desvio_mejora"]
+pc["txt"] = pc["mejora"].map(lambda v: ("+" if v > 0 else "") + S.num(v, 4))
+es_saga = pc["prueba"].str.contains("trampa")
+pc_g, saga = pc[~es_saga], pc[es_saga].iloc[0]
+titulo_grafico("Lo que se solicitó probar para que no achate",
+               "Cada estrategia contra el Random Forest ajustado, con los mismos 5 cortes de la validación cruzada. A la derecha del cero se "
+               "equivoca menos; a la izquierda, más.")
+# Gráfico: mejora de cada estrategia contra la referencia (validación cruzada temporal).
+#  datos: metricas.json["pruebas_correccion"] (E.pruebas_correccion: MAE de la referencia − MAE de la prueba, por corte)
+#  marcas: barra (mejora media) + regla (± un desvío entre cortes) + regla vertical en 0
+#  mapeo: y = estrategia, x = mejora del MAE, relleno y borde = resultado: violeta = mejora (lo que entra al
+#         modelo), grises = empata o empeora. La estrategia «pertenece a una saga» (trampa) no se dibuja: va en la
+#         tarjeta del camino 2
+DOM_RES = ["Mejora", "Empata (ruido)", "Empeora"]
+relleno_res = alt.Scale(domain=DOM_RES, range=[S.MODELO, S.GRIS_2, S.GRIS_1])
+borde_res = alt.Scale(domain=DOM_RES, range=[S.MODELO, S.GRIS_2, S.GRIS_1])
+y_pc = alt.Y("nombre:N", sort=list(pc_g["nombre"]), title=None, axis=alt.Axis(labelLimit=300, labelFontSize=12.5))
+mostrar(alt.layer(
+    alt.Chart(pc_g).mark_bar(height=22, cornerRadius=3, strokeWidth=1.5).encode(
+        x=alt.X("mejora:Q", title="Mejora del error contra la referencia (MAE). Positivo = se equivoca menos",
+                axis=alt.Axis(values=[-0.04, -0.03, -0.02, -0.01, 0, 0.01, 0.02])), y=y_pc,
+        fill=alt.Fill("resultado:N", scale=relleno_res, legend=alt.Legend(title=None, orient="top")),
+        stroke=alt.Stroke("resultado:N", scale=borde_res, legend=alt.Legend(title=None, orient="top")),
+        tooltip=[alt.Tooltip("prueba:N", title="Estrategia"), alt.Tooltip("que_es:N", title="Qué hace"),
+                 alt.Tooltip("txt:N", title="Mejora"), alt.Tooltip("cortes_gana:N", title="Cortes en que gana")]),
+    alt.Chart(pc_g).mark_rule(color=S.TINTA_2).encode(x="lo:Q", x2="hi:Q", y=y_pc),
+    alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(color=S.TINTA).encode(x="x:Q"),
+), alto=220)
+st.markdown(
+    "Ninguna de estas estrategias le agrega información al modelo. **Estirar** las predicciones y darles **más peso a "
+    "los extremos** intentan forzarlo a animarse, y empeoran en los 5 cortes: aciertan algo más en las puntas, pero se "
+    "equivocan mucho más en el medio, donde está la mayoría. **Promediar 3 modelos** y la **pérdida Huber** dan una "
+    "mejora tan chica que queda dentro del ruido; el promedio se eligió como modelo final por estabilidad.")
+
+st.markdown("<p class='camino'>Camino 2: darle más información</p>", unsafe_allow_html=True)
 recorrido = pd.DataFrame([
     {"etapa": "Piso (siempre la mediana)", "factor": FIN["factor_piso_test"], "rol": "Piso"},
     {"etapa": "Entrega 3 (lo que presentamos)", "factor": E3["factor_test"], "rol": "Antes"},
@@ -1255,6 +1303,17 @@ mostrar(alt.layer(
     alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(color=S.TINTA_SUAVE).encode(x="x:Q"),
 ), alto=230)
 
+st.markdown(f"""
+<div class='tarjetas' style='grid-template-columns: 1fr;'>
+  <div class='tarjeta'><div class='rotulo'>El dato que descartamos: «pertenece a una saga»</div>
+    <div class='valor oro'>{saga['txt']}</div>
+    <div class='nota'>Era la mayor mejora del error (MAE) de todas las estrategias, en {saga['cortes_gana']} cortes. Pero es
+    trampa: TMDb arma la saga cuando sale una secuela, y la secuela sale si a la primera le fue bien. Es usar el
+    resultado para predecir el resultado (fuga de información). Por eso solo usamos <b>«es secuela»</b>, que sí se sabe
+    antes del estreno.</div></div>
+</div>
+""", unsafe_allow_html=True)
+
 ext = tramos.melt(id_vars=["tramo_es"], value_vars=["real", "sin", "con"], var_name="valor", value_name="multiplo")
 ext["valor"] = ext["valor"].map({"real": "Lo que pasó de verdad", "sin": "Sin los datos nuevos",
                                  "con": "Con los datos nuevos (final)"})
@@ -1282,48 +1341,6 @@ st.markdown(
     f"Con los datos nuevos el modelo se acerca un poco más a lo real en las dos puntas: a las que perdieron plata pasa "
     f"de decirles {S.mult(perdida['sin'], 2)} a {S.mult(perdida['con'], 2)}, y a las que explotaron, de "
     f"{S.mult(top['sin'], 1)} a {S.mult(top['con'], 1)}. Mejora, pero los extremos siguen siendo lo más difícil.")
-
-pc = pd.DataFrame(M["pruebas_correccion"]).iloc[1:].copy()
-pc["nombre"] = pc["prueba"].map({
-    "Promedio de 3 modelos (el final)": "Promediar 3 modelos (el final)",
-    "Pérdida Huber (GradientBoosting)": "Pérdida Huber",
-    "Estirar las predicciones ×1,5": "Estirar las predicciones ×1,5",
-    "Más peso a los casos extremos": "Más peso a los extremos al aprender",
-    "+ «pertenece a una saga» (trampa)": "«Pertenece a una saga» (trampa)"})
-pc["resultado"] = np.select([pc["prueba"].str.contains("trampa"), pc["supera_ruido"], pc["mejora"] < 0],
-                            ["Mejora, pero es trampa", "Mejora", "Empeora"], "Empata (ruido)")
-pc.loc[(pc["mejora"] > 0) & ~pc["supera_ruido"] & ~pc["prueba"].str.contains("trampa"), "resultado"] = "Empata (ruido)"
-pc["lo"], pc["hi"] = pc["mejora"] - pc["desvio_mejora"], pc["mejora"] + pc["desvio_mejora"]
-pc["txt"] = pc["mejora"].map(lambda v: ("+" if v > 0 else "") + S.num(v, 4))
-titulo_grafico("Lo que se solicitó probar para que no achate",
-               "Cada estrategia contra el Random Forest ajustado, con los mismos 5 cortes de la validación cruzada. A la derecha del cero se "
-               "equivoca menos; a la izquierda, más.")
-# Gráfico: mejora de cada estrategia contra la referencia (validación cruzada temporal).
-#  datos: metricas.json["pruebas_correccion"] (E.pruebas_correccion: MAE de la referencia − MAE de la prueba, por corte)
-#  marcas: barra (mejora media) + regla (± un desvío entre cortes) + regla vertical en 0
-#  mapeo: y = estrategia, x = mejora del MAE, relleno y borde = resultado: violeta = mejora (lo que entra al
-#         modelo), grises = empata o empeora, hueco con borde violeta = mejoraría pero no se puede usar (trampa)
-DOM_RES = ["Mejora", "Empata (ruido)", "Empeora", "Mejora, pero es trampa"]
-relleno_res = alt.Scale(domain=DOM_RES, range=[S.MODELO, S.GRIS_2, S.GRIS_1, S.SUPERFICIE])
-borde_res = alt.Scale(domain=DOM_RES, range=[S.MODELO, S.GRIS_2, S.GRIS_1, S.MODELO])
-y_pc = alt.Y("nombre:N", sort=list(pc["nombre"]), title=None, axis=alt.Axis(labelLimit=300, labelFontSize=12.5))
-mostrar(alt.layer(
-    alt.Chart(pc).mark_bar(height=22, cornerRadius=3, strokeWidth=1.5).encode(
-        x=alt.X("mejora:Q", title="Mejora del error contra la referencia (MAE). Positivo = se equivoca menos",
-                axis=alt.Axis(values=[-0.04, -0.03, -0.02, -0.01, 0, 0.01, 0.02])), y=y_pc,
-        fill=alt.Fill("resultado:N", scale=relleno_res, legend=alt.Legend(title=None, orient="top")),
-        stroke=alt.Stroke("resultado:N", scale=borde_res, legend=alt.Legend(title=None, orient="top")),
-        strokeDash=alt.condition(alt.datum.resultado == DOM_RES[3], alt.value([4, 3]), alt.value([1, 0])),
-        tooltip=[alt.Tooltip("prueba:N", title="Estrategia"), alt.Tooltip("que_es:N", title="Qué hace"),
-                 alt.Tooltip("txt:N", title="Mejora"), alt.Tooltip("cortes_gana:N", title="Cortes en que gana")]),
-    alt.Chart(pc).mark_rule(color=S.TINTA_2).encode(x="lo:Q", x2="hi:Q", y=y_pc),
-    alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(color=S.TINTA).encode(x="x:Q"),
-), alto=250)
-st.markdown(
-    "**Estirar** las predicciones y darles **más peso a los extremos** empeoran en los 5 cortes de la validación cruzada: aciertan un poco más en "
-    "las puntas, pero se equivocan mucho más en el medio, donde está la mayoría. **Huber** empata. **«Pertenece a una "
-    "saga»** es la que más mejora, pero es trampa: TMDb arma la saga cuando sale una secuela, y la secuela sale si a la "
-    "primera le fue bien. Por eso solo usamos **«es secuela»**, que sí se sabe antes del estreno.")
 
 with como_lo_sabemos():
     st.markdown(f"""
