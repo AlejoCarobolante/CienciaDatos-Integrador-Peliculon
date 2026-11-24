@@ -111,6 +111,14 @@ div[data-testid="stMarkdownContainer"] p.grafico-bajada, .grafico-bajada {{font-
     margin: 0 0 .4rem 0;}}
 div[data-testid="stMarkdownContainer"] p.camino, .camino {{font-size: 1.5rem; font-weight: 800; color: {S.TINTA};
     border-left: 4px solid {S.MODELO}; padding-left: .8rem; margin: 2.6rem 0 .2rem 0; letter-spacing: -.01em;}}
+.datos-nuevos {{display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0 .6rem 0;}}
+.dato {{background: {S.PANEL}; border: 1px solid {S.GRILLA}; border-top: 3px solid {S.MODELO}; border-radius: 16px;
+    padding: 1rem 1.1rem;}}
+.dato .rotulo {{font-size: .75rem; color: {S.TINTA_SUAVE}; text-transform: uppercase; letter-spacing: .1em; font-weight: 600;}}
+.dato .titulo {{font-size: 1.35rem; font-weight: 800; color: {S.MODELO}; margin: .3rem 0 .4rem 0; line-height: 1.15;}}
+.dato .desc {{font-size: .9rem; color: {S.TINTA_2}; line-height: 1.5;}}
+.dato-pie {{color: {S.TINTA_2}; margin: 0 0 .4rem 0;}}
+.dato-pie b {{color: {S.DORADO};}}
 .hero {{position: relative; border-radius: 22px; padding: 2.4rem 2.4rem 1.6rem 2.4rem; margin-bottom: .6rem;
     background: radial-gradient(1200px 400px at 85% -10%, rgba(165,148,255,.28), transparent 60%),
                 radial-gradient(800px 300px at -10% 110%, rgba(255,200,87,.16), transparent 60%), {S.PANEL};
@@ -164,6 +172,7 @@ div[data-testid="stExpander"] details {{background: {S.PANEL}; border-color: {S.
 div[data-testid="stHorizontalBlock"]:has(div.pb-pegajoso) {{align-items: flex-start;}}
 div[data-testid="stColumn"]:has(div.pb-pegajoso) {{position: sticky; top: 3.2rem; align-self: flex-start;}}
 @media (max-width: 760px) {{
+  .datos-nuevos {{grid-template-columns: repeat(2, minmax(0, 1fr));}}
   .tarjetas, .capitulos {{grid-template-columns: 1fr;}} .flujo {{flex-direction: column;}} .flecha {{display: none;}}
   .hero {{padding: 1.4rem;}} .hero h1 {{font-size: 2rem;}}
   div[data-testid="stMarkdownContainer"] p.titulo-seccion {{font-size: 1.55rem;}}
@@ -1259,15 +1268,47 @@ st.markdown(
 
 st.markdown("<p class='camino'>Camino 2: darle más información</p>", unsafe_allow_html=True)
 st.markdown("""
+<p class='bajada' style='margin-bottom: 0;'>A lo que el modelo ya usaba (presupuesto, género, idioma, duración…) le sumamos
+cuatro grupos de datos nuevos.</p>
+<div class='datos-nuevos'>
+  <div class='dato'><div class='rotulo'>Grupo 1</div><div class='titulo'>Saga y secuela</div>
+    <div class='desc'>Si es secuela y cómo les fue a las películas anteriores de la saga.</div></div>
+  <div class='dato'><div class='rotulo'>Grupo 2</div><div class='titulo'>Director y actor</div>
+    <div class='desc'>Cómo les fue antes a las películas del director y del actor principal.</div></div>
+  <div class='dato'><div class='rotulo'>Grupo 3</div><div class='titulo'>De qué se trata</div>
+    <div class='desc'>Si está basada en un libro, un cómic o una historia real; remake, videojuego, musical, Navidad…</div></div>
+  <div class='dato'><div class='rotulo'>Grupo 4</div><div class='titulo'>Países</div>
+    <div class='desc'>Cuántos países la producen y si uno es Estados Unidos.</div></div>
+</div>
+<p class='dato-pie'><b>Todos se conocen antes del estreno.</b> Abajo: cuál de los cuatro sirvió de verdad.</p>
+""", unsafe_allow_html=True)
+
+grupos = pd.DataFrame(CTX["grupos"]).sort_values("aporte", ascending=False)
+grupos["lo"], grupos["hi"] = grupos["aporte"] - grupos["desvio"], grupos["aporte"] + grupos["desvio"]
+grupos["txt"] = grupos["aporte"].map(lambda v: S.num(v, 4))
+titulo_grafico("¿Qué dato nuevo aportó más?",
+               "Cuánto empeora el modelo en la validación cruzada si se le saca cada grupo de columnas nuevas.")
+# Gráfico: aporte de cada grupo de columnas nuevas (ablación en la validación cruzada).
+#  datos: metricas.json["contexto"]["grupos"] (MAE del Random Forest ajustado sin el grupo − con todas)
+#  marca: barra + regla de ± un desvío entre cortes; mapeo: y = grupo, x = aumento del MAE; color violeta
+y_g = alt.Y("grupo:N", sort=list(grupos["grupo"]), title=None, axis=alt.Axis(labelLimit=260, labelFontSize=12.5))
+mostrar(alt.layer(
+    alt.Chart(grupos).mark_bar(height=22, color=S.MODELO, cornerRadiusEnd=4).encode(
+        x=alt.X("aporte:Q", title="Cuánto sube el error sin ese grupo (MAE)", axis=alt.Axis(tickCount=6)), y=y_g,
+        tooltip=[alt.Tooltip("grupo:N", title="Grupo"), alt.Tooltip("txt:N", title="Aporte"),
+                 alt.Tooltip("cortes:N", title="Cortes en que ayuda")]),
+    alt.Chart(grupos).mark_rule(color=S.TINTA_2).encode(x="lo:Q", x2="hi:Q", y=y_g),
+    alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(color=S.TINTA_SUAVE).encode(x="x:Q"),
+), alto=230)
+
+st.markdown(f"""
 <div class='tarjetas' style='grid-template-columns: 1fr;'>
-  <div class='tarjeta'><div class='rotulo'>Qué datos agregamos</div>
-    <div class='nota' style='margin-top: .5rem;'>
-      <b>Historia del director y del actor:</b> cómo les fue antes a sus películas (director y actor principal).<br>
-      <b>Historia de la saga y si es secuela:</b> si es secuela y cómo les fue a las anteriores de la saga.<br>
-      <b>De qué se trata (palabras clave):</b> si está basada en un libro, un cómic o una historia real, si es un remake, un
-      videojuego, un musical, de Navidad o de found footage.<br>
-      <b>Países que la producen:</b> de qué países es: cuántos la producen y si uno es EE. UU.<br>
-      <b>Todos se conocen antes del estreno.</b></div></div>
+  <div class='tarjeta'><div class='rotulo'>El dato que descartamos: «pertenece a una saga»</div>
+    <div class='valor oro'>{saga['txt']}</div>
+    <div class='nota'>Era la mayor mejora del error (MAE) de todas las estrategias, en {saga['cortes_gana']} cortes. Pero es
+    trampa: TMDb arma la saga cuando sale una secuela, y la secuela sale si a la primera le fue bien. Es usar el
+    resultado para predecir el resultado (fuga de información). Por eso solo usamos <b>«es secuela»</b>, que sí se sabe
+    antes del estreno.</div></div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -1298,34 +1339,6 @@ mostrar(alt.layer(
     br.mark_text(align="left", dx=8, fontSize=12.5, fontWeight="bold", color=S.TINTA).encode(
         x="factor:Q", y=y_rec, text="txt:N"),
 ), alto=230)
-grupos = pd.DataFrame(CTX["grupos"]).sort_values("aporte", ascending=False)
-grupos["lo"], grupos["hi"] = grupos["aporte"] - grupos["desvio"], grupos["aporte"] + grupos["desvio"]
-grupos["txt"] = grupos["aporte"].map(lambda v: S.num(v, 4))
-titulo_grafico("¿Qué dato nuevo aportó más?",
-               "Cuánto empeora el modelo en la validación cruzada si se le saca cada grupo de columnas nuevas.")
-# Gráfico: aporte de cada grupo de columnas nuevas (ablación en la validación cruzada).
-#  datos: metricas.json["contexto"]["grupos"] (MAE del Random Forest ajustado sin el grupo − con todas)
-#  marca: barra + regla de ± un desvío entre cortes; mapeo: y = grupo, x = aumento del MAE; color violeta
-y_g = alt.Y("grupo:N", sort=list(grupos["grupo"]), title=None, axis=alt.Axis(labelLimit=260, labelFontSize=12.5))
-mostrar(alt.layer(
-    alt.Chart(grupos).mark_bar(height=22, color=S.MODELO, cornerRadiusEnd=4).encode(
-        x=alt.X("aporte:Q", title="Cuánto sube el error sin ese grupo (MAE)", axis=alt.Axis(tickCount=6)), y=y_g,
-        tooltip=[alt.Tooltip("grupo:N", title="Grupo"), alt.Tooltip("txt:N", title="Aporte"),
-                 alt.Tooltip("cortes:N", title="Cortes en que ayuda")]),
-    alt.Chart(grupos).mark_rule(color=S.TINTA_2).encode(x="lo:Q", x2="hi:Q", y=y_g),
-    alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(color=S.TINTA_SUAVE).encode(x="x:Q"),
-), alto=230)
-
-st.markdown(f"""
-<div class='tarjetas' style='grid-template-columns: 1fr;'>
-  <div class='tarjeta'><div class='rotulo'>El dato que descartamos: «pertenece a una saga»</div>
-    <div class='valor oro'>{saga['txt']}</div>
-    <div class='nota'>Era la mayor mejora del error (MAE) de todas las estrategias, en {saga['cortes_gana']} cortes. Pero es
-    trampa: TMDb arma la saga cuando sale una secuela, y la secuela sale si a la primera le fue bien. Es usar el
-    resultado para predecir el resultado (fuga de información). Por eso solo usamos <b>«es secuela»</b>, que sí se sabe
-    antes del estreno.</div></div>
-</div>
-""", unsafe_allow_html=True)
 
 ext = tramos.melt(id_vars=["tramo_es"], value_vars=["real", "sin", "con"], var_name="valor", value_name="multiplo")
 ext["valor"] = ext["valor"].map({"real": "Lo que pasó de verdad", "sin": "Sin los datos nuevos",
