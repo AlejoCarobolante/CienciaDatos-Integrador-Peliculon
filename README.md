@@ -6,16 +6,15 @@ Proyecto integrador de Ciencia de Datos · UTN FRM 2026.
 elenco, saga y fecha), ¿podemos anticipar cuántas veces recupera una película lo que costó?
 
 **El hallazgo, en una oración:** sí, pero poco: con lo que se sabe antes del estreno, el modelo se equivoca un 13,5%
-menos que adivinar y casi nunca anticipa que una película va a perder plata.
+menos que el piso (predecir siempre la mediana del entrenamiento, ×2,47, sin mirar ningún dato) y casi nunca anticipa que una película va a perder plata.
 
-Los números que lo sostienen, en las 1.278 películas del examen final (estrenadas de 2017 a 2025, que el modelo nunca
+Los números que lo sostienen, en las 1.278 películas del test (estrenadas de 2017 a 2025, que el modelo nunca
 vio; aprendió con las estrenadas hasta enero de 2017):
 
 - **Error típico ×2,67.** El modelo (el promedio de un Random Forest ajustado, HistGB y Ridge) anticipa el múltiplo
-  `recaudación / presupuesto` con un error de ×2,67 para arriba o para abajo, contra ×3,11 de adivinar siempre la
-  mediana: **13,5% menos**. En la Entrega 3 era ×2,87 (7% menos); la mejora vino de sumar director, actor, saga,
+  `recaudación / presupuesto` con un error de ×2,67 para arriba o para abajo, contra ×3,11 del piso: **13,5% menos**. En la Entrega 3 era ×2,87 (7% menos); la mejora vino de sumar director, actor, saga,
   palabras clave y países, que se conocen antes del estreno.
-- **Pérdidas anticipadas: 20 de 347.** De las películas del examen que perdieron plata, solo a 20 les predijo pérdida.
+- **Pérdidas anticipadas: 20 de 347.** De las películas del test que perdieron plata, solo a 20 les predijo pérdida.
   A la típica del grupo, que recuperó ×0,42, le predijo ×1,65. El modelo «achata»: predice todo cerca del medio.
 - **Lo que más pesa es el presupuesto:** las películas baratas multiplican mucho más lo que cuestan (mediana ×18 con
   menos de 1 millón de dólares, ×2 entre 10 y 100 millones), pero también se desparraman más.

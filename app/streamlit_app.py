@@ -276,14 +276,14 @@ los múltiplos van de ×0,001 a más de ×10.000.
 
 **Entrenamiento.** Las películas con las que el modelo aprende (las estrenadas hasta {CORTE}).
 
-**Examen (test).** Las {S.num(M['particion']['n_test'])} películas más nuevas ({anios_test[0]}–{anios_test[1]}): se
+**Test.** Las {S.num(M['particion']['n_test'])} películas más nuevas ({anios_test[0]}–{anios_test[1]}): se
 apartan al principio y el modelo nunca las ve. Se mide una sola vez, al final.
 
-**Validación cruzada temporal.** Antes del examen, cinco pruebas de práctica: el modelo aprende con un período y se
-prueba con el siguiente. Sirve para elegir el modelo sin tocar el examen.
+**Validación cruzada temporal.** Antes del test, cinco cortes por fecha: el modelo aprende con un período y se
+prueba con el siguiente. Sirve para elegir el modelo sin tocar el test.
 
-**Piso (adivinar).** Decir siempre el múltiplo más común del entrenamiento ({S.mult(10 ** FIN['mediana_piso_y'])}),
-sin mirar ningún dato. Un modelo que no le gana al piso no sirve.
+**Piso.** Predecir siempre la mediana del entrenamiento ({S.mult(10 ** FIN['mediana_piso_y'])}), sin mirar ningún
+dato. Un modelo que no le gana al piso no sirve.
 
 **Error típico (factor).** Por cuántas veces se equivoca la predicción, para arriba o para abajo. ×{S.num(FIN['factor_test'], 2)}
 quiere decir que si una película recuperó ×2, el modelo suele decir algo entre {S.mult(2 / FIN['factor_test'], 1)} y
@@ -295,7 +295,7 @@ MAE {S.num(FIN['mae_test'], 2)} → ×{S.num(FIN['factor_test'], 2)}.
 **R².** Qué parte de las diferencias entre películas explica el modelo (1 = todas, 0 = ninguna). Da
 {S.num(FIN['r2_test'], 2)}: explica poco.
 
-**Desvío.** Cuánto cambia un resultado de una prueba a otra. Una mejora más chica que su desvío puede ser ruido.
+**Desvío.** Cuánto cambia un resultado de un corte a otro. Una mejora más chica que su desvío puede ser ruido.
 
 **Achatar.** Cuando el modelo predice todo cerca del medio: a las que perdieron les da ganancia y a los fenómenos les
 da mucho menos de lo que recuperaron.
@@ -321,7 +321,8 @@ st.markdown(f"""
   <h1>¿Se puede saber, antes del estreno, <span>cuántas veces va a recuperar</span> una película lo que costó?</h1>
   <p class='rotulo-respuesta'>La respuesta, en una oración</p>
   <p class='respuesta'>Sí, pero poco: con lo que se sabe antes del estreno, el modelo se equivoca un
-  <b>{S.pct(FIN['mejora_test_pct'], 1)} menos</b> que adivinar y casi nunca anticipa que una película va a
+  <b>{S.pct(FIN['mejora_test_pct'], 1)} menos</b> que el piso (predecir siempre la mediana del entrenamiento,
+  {S.mult(10 ** FIN['mediana_piso_y'])}, sin mirar ningún dato) y casi nunca anticipa que una película va a
   <b>perder plata</b>.</p>
   <p class='contexto'>Lo medimos con {S.num(n_alcance)} películas de TMDb: el modelo aprendió con las estrenadas hasta
   {CORTE} y lo examinamos con las {S.num(M['particion']['n_test'])} siguientes, que nunca había visto.</p>
@@ -335,12 +336,12 @@ st.markdown(f"""
     <div class='nota'>Arriba o abajo de lo real, en {S.num(M['particion']['n_test'])} películas de {anios_test[0]}–{anios_test[1]}
     que el modelo nunca vio. Si una recuperó ×2, suele decir algo entre {S.mult(2 / FIN['factor_test'], 1)} y
     {S.mult(2 * FIN['factor_test'], 1)}.</div></div>
-  <div class='tarjeta'><div class='rotulo'>Menos error que adivinar</div><div class='valor modelo'>{S.pct(FIN['mejora_test_pct'], 1)}</div>
-    <div class='nota'>Adivinar es decir siempre el múltiplo más común: así el error típico es {S.mult(FIN['factor_piso_test'])}.
+  <div class='tarjeta'><div class='rotulo'>Menos error que la mediana</div><div class='valor modelo'>{S.pct(FIN['mejora_test_pct'], 1)}</div>
+    <div class='nota'>Predecir siempre la mediana da un error típico de {S.mult(FIN['factor_piso_test'])}.
     En la Entrega 3, el modelo mejoraba un {S.pct(E3['mejora_test_pct'], 0)}.</div></div>
   <div class='tarjeta'><div class='rotulo'>Pérdidas que anticipó</div>
     <div class='valor'>{n_perdida_anticipada} <span style='font-size:1.3rem;font-weight:600;color:{S.TINTA_2}'>de {S.num(n_perdieron)}</span></div>
-    <div class='nota'>De las películas del examen que perdieron plata, solo a esas les predijo pérdida
+    <div class='nota'>De las películas del test que perdieron plata, solo a esas les predijo pérdida
     ({S.pct(n_perdida_anticipada / n_perdieron)}). A la típica del grupo, que recuperó {S.mult(tramos.iloc[0]['roi_real_mediano'] + 1)},
     le predijo {S.mult(tramos.iloc[0]['roi_pred_mediano'] + 1)}: ganancia.</div></div>
 </div>
@@ -541,10 +542,10 @@ st.markdown(
 
 anios = P[P["release_year"] >= 1940].groupby(["release_year", "conjunto"]).size().reset_index(name="peliculas")
 anios["conjunto_es"] = anios["conjunto"].map({"entrenamiento": f"Para aprender (hasta {CORTE})",
-                                              "test": f"Examen final ({anios_test[0]}–{anios_test[1]})"})
+                                              "test": f"Test ({anios_test[0]}–{anios_test[1]})"})
 titulo_grafico("De qué época son",
-               "La mayoría es de 1990 en adelante. Las más nuevas se guardan aparte desde el principio: son el examen "
-               "final del modelo (sección 3).")
+               "La mayoría es de 1990 en adelante. Las más nuevas se guardan aparte desde el principio: son el test "
+               "del modelo (sección 3).")
 # Gráfico: películas por año de estreno.
 #  datos: predicciones.parquet agrupado por año y conjunto (entrenamiento / test) con pandas
 #  marca: barra apilada por año; mapeo: x = año (temporal discreto), y = cantidad, color = conjunto
@@ -771,23 +772,23 @@ st.divider()
 # 3 · EL MODELO (Entrega 3)
 # =============================================================================================
 seccion("modelo", "3 · El modelo",
-        f"En películas que nunca vio, el modelo se equivoca un {S.pct(FIN['mejora_test_pct'], 1)} menos que adivinar: "
+        f"En películas que nunca vio, el modelo se equivoca un {S.pct(FIN['mejora_test_pct'], 1)} menos que la mediana: "
         "acierta con las normales y falla en las puntas",
         f"Aprendió con las películas estrenadas hasta {CORTE} y lo medimos una sola vez, al final, con las "
-        f"{S.num(M['particion']['n_test'])} siguientes ({anios_test[0]} a {anios_test[1]}). Le gana a adivinar, pero "
+        f"{S.num(M['particion']['n_test'])} siguientes ({anios_test[0]} a {anios_test[1]}). Le gana a la mediana, pero "
         "el margen sigue siendo grande.")
 
 c1, c2 = st.columns([1, 1.25], gap="large")
 with c1:
-    titulo_grafico("¿Le gana a adivinar?",
-                   f"Error típico en el examen final ({S.num(M['particion']['n_test'])} películas). Menos es mejor. "
-                   f"«Adivinar» es decir siempre {S.mult(10 ** FIN['mediana_piso_y'])}, el múltiplo más común, sin mirar "
+    titulo_grafico("¿Le gana a la mediana?",
+                   f"Error típico en el test ({S.num(M['particion']['n_test'])} películas). Menos es mejor. "
+                   f"El piso dice siempre {S.mult(10 ** FIN['mediana_piso_y'])}, la mediana, sin mirar "
                    "ningún dato.")
     # Gráfico: error del piso contra el modelo final en el test.
     #  datos: metricas.json["final"] (MAE de test pasado a factor: 10^MAE)
     #  marca: barra horizontal; mapeo: y = quién predice, x = factor de error (lineal desde ×1, que sería acertar
     #  siempre), color = rol (gris = piso, violeta = modelo); texto = el factor
-    duelo = pd.DataFrame({"quien": ["Adivinar", "Nuestro modelo"],
+    duelo = pd.DataFrame({"quien": ["Piso (siempre la mediana)", "Nuestro modelo"],
                           "factor": [FIN["factor_piso_test"], FIN["factor_test"]], "rol": ["Piso", "Modelo final"]})
     duelo["txt"] = duelo["factor"].map(lambda v: S.mult(v, 2))
     duelo["uno"] = 1.0  # las barras arrancan en ×1 (acertar siempre), no en 0
@@ -802,12 +803,12 @@ with c1:
         bdu.mark_text(align="left", dx=8, fontSize=16, fontWeight="bold", color=S.TINTA).encode(
             x="factor:Q", y=y_du, text="txt:N"),
     ), alto=170)
-    st.markdown(f"**{S.pct(FIN['mejora_test_pct'], 1)} menos error.** Si una película recuperó ×2, adivinar dice "
+    st.markdown(f"**{S.pct(FIN['mejora_test_pct'], 1)} menos error.** Si una película recuperó ×2, la mediana dice "
                 f"{S.mult(10 ** FIN['mediana_piso_y'], 1)} siempre; el modelo suele quedar entre "
                 f"{S.mult(2 / FIN['factor_test'], 1)} y {S.mult(2 * FIN['factor_test'], 1)}.")
 
 orden_modelos = ["Piso (mediana)", "Ridge", "Random Forest", "HistGB (absolute_error)", E.NOMBRE_RF, E.NOMBRE_FINAL]
-nombres_cortos = {"Piso (mediana)": "Piso (adivinar)", "Ridge": "Ridge (lineal)",
+nombres_cortos = {"Piso (mediana)": "Piso (siempre la mediana)", "Ridge": "Ridge (lineal)",
                   "Random Forest": "Random Forest", "HistGB (absolute_error)": "HistGB (boosting)",
                   E.NOMBRE_RF: "Random Forest ajustado", E.NOMBRE_FINAL: "Promedio de los 3 (final)"}
 mm = modelos.loc[orden_modelos].reset_index()
@@ -818,8 +819,8 @@ mm["f"] = fac(mm["mae_cv"])
 mm["f_txt"] = mm["f"].map(lambda v: S.mult(v, 2))
 with c2:
     titulo_grafico("¿Por qué este modelo?",
-                   "Práctica: 5 pruebas con películas posteriores a las que vio al aprender. Punto = error promedio; "
-                   "línea = cuánto varía entre pruebas.")
+                   "Validación cruzada: 5 cortes con películas posteriores a las que vio al aprender. Punto = error promedio; "
+                   "línea = cuánto varía entre cortes.")
     # Gráfico: error de cada modelo en la validación cruzada temporal.
     #  datos: metricas.json["modelos"] (MAE medio y desvío en 5 cortes, pasados a factor 10^MAE)
     #  mapeo: y = modelo (orden fijo, del más simple al final), x = factor (no arranca en ×1: se comparan diferencias
@@ -832,7 +833,7 @@ with c2:
     bm = alt.Chart(mm)
     mostrar(alt.layer(
         bm.mark_rule(strokeWidth=2.5).encode(
-            x=alt.X("lo:Q", scale=x_mod, title="Factor de error en la práctica",
+            x=alt.X("lo:Q", scale=x_mod, title="Factor de error en la validación cruzada",
                     axis=alt.Axis(values=[2.2, 2.4, 2.6, 2.8, 3.0], labelExpr=S.ETIQUETA_MULTIPLO)),
             x2="hi:Q", y=y_mod, color=alt.Color("rol:N", scale=escala_rol, legend=None)),
         bm.mark_circle(size=190, opacity=1).encode(
@@ -840,7 +841,7 @@ with c2:
             tooltip=[alt.Tooltip("modelo:N", title="Modelo"), alt.Tooltip("f_txt:N", title="Error promedio")]),
         bm.mark_text(dy=-13, fontSize=11.5, color=S.TINTA_2).encode(x=alt.X("f:Q", scale=x_mod), y=y_mod, text="f_txt:N"),
     ), alto=270)
-    st.markdown("Todos le ganan a adivinar, y entre ellos casi empatan. Elegimos el **promedio de los tres** porque "
+    st.markdown("Todos le ganan a la mediana, y entre ellos casi empatan. Elegimos el **promedio de los tres** porque "
                 "es el más estable y no depende de un solo modelo.")
 
 # Gráfico: el modelo a lo largo del tiempo, antes y después de que empieza el examen.
@@ -851,7 +852,7 @@ with c2:
 #  mapeo A: x = año, y = múltiplo mediano (lineal), color = real (gris) o predicción (violeta)
 #  mapeo B: x = año, y = factor de error 10^MAE, color = si el modelo ya había visto esas películas o no
 #  marcas: línea + punto (A), barras (B); reglas verticales punteadas (referencias) en 2017 y 2020
-ETAPA_VISTAS, ETAPA_EXAMEN = "Ya las había visto", f"Examen ({anios_test[0]}–{anios_test[1]})"
+ETAPA_VISTAS, ETAPA_EXAMEN = "Ya las había visto", f"Test ({anios_test[0]}–{anios_test[1]})"
 P_anual = P[(P["release_year"] >= 2000)
             & ~((P["conjunto"] == "entrenamiento") & (P["release_year"] >= anios_test[0]))]
 anual = (P_anual.groupby("release_year")
@@ -867,7 +868,7 @@ anual["n_txt"] = anual["n"].map(lambda v: f"{S.num(v)} películas")
 largo_t = anual.melt(id_vars=["release_year", "n_txt"], value_vars=["real", "pred"], var_name="serie", value_name="mult")
 largo_t["serie"] = largo_t["serie"].map({"real": "Lo que recuperaron de verdad", "pred": "Lo que predijo el modelo"})
 largo_t["mult_txt"] = largo_t["mult"].map(lambda v: S.mult(v, 2))
-hitos = pd.DataFrame({"release_year": [anios_test[0], 2020], "t": ["empieza el examen", "pandemia y estrenos en streaming"],
+hitos = pd.DataFrame({"release_year": [anios_test[0], 2020], "t": ["empieza el test", "pandemia y estrenos en streaming"],
                       "color": [S.REFERENCIA, S.TINTA_2], "mult": [3.95, 3.65], "desde": [1.1, 1.1], "hasta": [3.45, 3.45]})
 x_t = alt.X("release_year:Q", title="Año de estreno", scale=alt.Scale(domain=[2000, 2025]),
             axis=alt.Axis(format="d", values=list(range(2000, 2026, 5)), labelExpr="datum.label"))
@@ -885,7 +886,7 @@ texto_t = alt.Chart(hitos).mark_text(align="right", dx=-6, baseline="middle", fo
 titulo_grafico("De 2000 a 2019 las películas recuperaban cada vez más; desde 2020 recuperan menos y el modelo no se entera",
                "Año por año: lo que recuperó la película mediana contra lo que predijo el modelo (izquierda) y cuánto se "
                f"equivocó (derecha). Hasta {anios_test[0] - 1} son películas con las que el modelo aprendió; desde "
-               f"{anios_test[0]}, solo las del examen.")
+               f"{anios_test[0]}, solo las del test.")
 ct1, ct2 = st.columns(2, gap="large")
 with ct1:
     mostrar(alt.layer(
@@ -918,20 +919,20 @@ st.markdown(
     f"({n_de_mas} de {len(despues)} años).** En 2020 la película mediana "
     f"recuperó {S.mult(a_.loc[2020, 'real'])} y el modelo esperaba {S.mult(a_.loc[2020, 'pred'])}: el error de ese año "
     f"es de {S.mult(a_.loc[2020, 'factor'])}, el más alto de la serie. Con películas que no había visto al ajustarse "
-    f"(validación, 1988–2017) el modelo se equivoca {S.mult(fac(FIN['mae_cv']))}; en el examen "
+    f"(validación, 1988–2017) el modelo se equivoca {S.mult(fac(FIN['mae_cv']))}; en el test "
     f"{anios_test[0]}–{anios_test[1]}, {S.mult(FIN['factor_test'])}. El error ya sube en 2017–2019, llega al pico en "
     f"2020 y después baja, pero no vuelve a los niveles de antes ({S.mult(a_.loc[2022:2025, 'factor'].min(), 1)} a "
     f"{S.mult(a_.loc[2022:2025, 'factor'].max(), 1)} entre 2022 y 2025). Ahí coinciden la pandemia y el paso de los "
     "estrenos a las plataformas de streaming, donde la recaudación en TMDb es mínima o inexistente.")
 st.caption(f"Es una pista, no una prueba: la pandemia y el streaming caen en el mismo tramo y con estos datos no se pueden "
-           f"separar, y el piso (adivinar la mediana) también empeora, de {S.mult(fac(FIN['mae_piso_cv']))} a "
+           f"separar, y el piso (la mediana) también empeora, de {S.mult(fac(FIN['mae_piso_cv']))} a "
            f"{S.mult(FIN['factor_piso_test'])}. Antes de {anios_test[0]} el modelo ya había visto esas películas, así que "
            f"tanto las líneas como las barras de esos años son optimistas. En {anios_test[0]} se cuentan solo las del "
-           f"examen: las {n_train_anio_test} películas de {CORTE} con las que el modelo aprendió quedan afuera.")
+           f"test: las {n_train_anio_test} películas de {CORTE} con las que el modelo aprendió quedan afuera.")
 
 T = P[P["conjunto"] == "test"].copy()
 TR = P[P["conjunto"] == "entrenamiento"].copy()
-GRUPO_TEST, GRUPO_TRAIN = f"Examen ({anios_test[0]}–{anios_test[1]})", f"Hasta {CORTE}"
+GRUPO_TEST, GRUPO_TRAIN = f"Test ({anios_test[0]}–{anios_test[1]})", f"Hasta {CORTE}"
 OPC_PERIODO = [GRUPO_TEST, f"Hasta {CORTE} (las que vio al aprender)", "Las dos"]
 T["grupo"], TR["grupo"] = GRUPO_TEST, GRUPO_TRAIN
 # Gráfico: lo real contra lo predicho, película por película (selector de período).
@@ -949,7 +950,7 @@ franja = pd.DataFrame({"x": xs, "lo": xs / FIN["factor_test"], "hi": xs * FIN["f
 ax_rp = dict(values=[0.01, 0.1, 1, 10, 100, 1000], labelExpr=S.ETIQUETA_MULTIPLO)
 FAMOSAS_RP = ["Get Out", "The Irishman", "Joker", "Cats", "Avengers: Endgame"]
 AVISO_VISTAS = (f"Ojo: el modelo aprendió con las películas hasta {CORTE}, así que esas aparecen más pegadas a la diagonal de "
-                "lo que estarían con películas nuevas. La comparación justa es el examen.")
+                "lo que estarían con películas nuevas. La comparación justa es el test.")
 titulo_grafico("Así achata el modelo")
 
 
@@ -957,16 +958,16 @@ titulo_grafico("Así achata el modelo")
 def grafico_achata():
     periodo = st.radio("Período", OPC_PERIODO, horizontal=True, label_visibility="collapsed", key="periodo_achata")
     if periodo == OPC_PERIODO[0]:
-        D, que = T, f"Las {S.num(len(T))} películas del examen final."
+        D, que = T, f"Las {S.num(len(T))} películas del test."
     elif periodo == OPC_PERIODO[1]:
         D, que = TR, f"Las {S.num(len(TR))} películas de hasta {CORTE}, con las que el modelo aprendió."
     else:
         D = pd.concat([TR, T], ignore_index=True)
         que = (f"Las {S.num(len(D))} películas: {S.num(len(TR))} de hasta {CORTE} (con las que el modelo aprendió) y "
-               f"{S.num(len(T))} del examen final.")
+               f"{S.num(len(T))} del test.")
     p_lo, p_hi = D["multiplo_pred"].quantile([0.01, 0.99])
     r_lo, r_hi = D["multiplo_real"].quantile([0.01, 0.99])
-    franja_txt = "su error típico" if periodo == OPC_PERIODO[0] else "el error típico del examen"
+    franja_txt = "su error típico" if periodo == OPC_PERIODO[0] else "el error típico del test"
     st.markdown(f"<p class='grafico-bajada'>{que} Si el modelo acertara siempre, todas caerían sobre la diagonal; la franja "
                 f"violeta es {franja_txt}. Lo real se reparte de {S.mult(r_lo, 2)} a {S.mult(r_hi, 0)}; lo que predice, de "
                 f"{S.mult(p_lo, 1)} a {S.mult(p_hi, 1)}: los puntos quedan aplastados contra el medio.</p>",
@@ -1009,7 +1010,7 @@ def grafico_achata():
     mostrar(alt.layer(*capas), alto=520)
     if periodo == OPC_PERIODO[2]:
         st.markdown(f"**Error típico de lo que se ve:** hasta {CORTE}, {S.mult(10 ** TR['error_abs'].mean())}; "
-                    f"examen, {S.mult(10 ** T['error_abs'].mean())}.")
+                    f"test, {S.mult(10 ** T['error_abs'].mean())}.")
     else:
         st.markdown(f"**Error típico de lo que se ve:** {S.mult(10 ** D['error_abs'].mean())}.")
     if periodo == OPC_PERIODO[0]:
@@ -1028,7 +1029,7 @@ tl = tramos.melt(id_vars=["tramo_es", "peliculas"], value_vars=["real", "con"], 
 tl["valor"] = tl["valor"].map({"real": "Lo que pasó de verdad", "con": "Lo que dijo el modelo"})
 tl["multiplo_txt"] = tl["multiplo"].map(lambda v: S.mult(v, 2))
 titulo_grafico("¿Dónde acierta y dónde falla?",
-               "Películas del examen agrupadas por lo que les pasó de verdad. Blanco = lo real (típico del grupo); "
+               "Películas del test agrupadas por lo que les pasó de verdad. Blanco = lo real (típico del grupo); "
                "violeta = lo que dijo el modelo. Cuanto más larga la línea, más le erra.")
 # Gráfico: lo real contra lo predicho, por tramo de resultado (test).
 #  datos: metricas.json["por_tramo"] (mediana del múltiplo real y del predicho en cada tramo), en formato largo
@@ -1099,10 +1100,9 @@ corte 4 se dispara por *Paranormal Activity* (ROI ≈ 12.900). Con ese desvío n
 
 **La validación imita el uso:** el modelo se usaría para películas futuras con lo aprendido de las pasadas.
 1. Las películas se ordenan por fecha de estreno.
-2. El **20% más reciente** ({S.num(M['particion']['n_test'])} películas, {anios_test[0]}–{anios_test[1]}) es el examen
-   final (test): se aparta al principio y se mide una sola vez. El corte es por año y mes, no por año: el
+2. El **20% más reciente** ({S.num(M['particion']['n_test'])} películas, {anios_test[0]}–{anios_test[1]}) es el test: se aparta al principio y se mide una sola vez. El corte es por año y mes, no por año: el
    entrenamiento llega hasta {CORTE} ({n_train_anio_test} películas de ese mes quedaron para aprender y el resto
-   de {anios_test[0]}, para el examen).
+   de {anios_test[0]}, para el test).
 3. Sobre el 80% restante ({S.num(M['particion']['n_train'])} películas), `TimeSeriesSplit(5)`: cada corte aprende con el
    pasado y se prueba con el período siguiente.
 """)
@@ -1158,13 +1158,13 @@ estos hiperparámetros.
         columns={"min_samples_leaf": "min_samples_leaf", "max_features": "max_features", "mae": "MAE", "desvio": "Desvío"}),
         hide_index=True, width="stretch", height=220)
     st.markdown(f"""
-**El examen final** ({S.num(M['particion']['n_test'])} películas, mirado una vez): MAE {S.num(FIN['mae_test'], 4)}
+**El test** ({S.num(M['particion']['n_test'])} películas, mirado una vez): MAE {S.num(FIN['mae_test'], 4)}
 ({S.mult(FIN['factor_test'])}), contra {S.num(FIN['mae_piso_test'], 4)} ({S.mult(FIN['factor_piso_test'])}) del piso.
 R² = {S.num(FIN['r2_test'], 2)}: explica una parte chica de las diferencias entre películas. El test da peor que la
 validación para todos, también para el piso: {anios_test[0]}–{anios_test[1]} es más difícil (pandemia y estrenos en
 streaming).
 
-**Los errores más grandes del examen:**
+**Los errores más grandes del test:**
 """)
     cols_e = {"title": "Película", "release_year": "Año", "budget": "Presupuesto", "revenue": "Recaudación",
               "roi": "ROI real", "roi_pred": "ROI predicho"}
@@ -1211,17 +1211,17 @@ seccion("mejora", "4 · Cómo lo mejoramos",
         "actúa, si es secuela y cómo le fue a la saga, de qué trata y de dónde es.")
 
 recorrido = pd.DataFrame([
-    {"etapa": "Adivinar (piso)", "factor": FIN["factor_piso_test"], "rol": "Piso"},
+    {"etapa": "Piso (siempre la mediana)", "factor": FIN["factor_piso_test"], "rol": "Piso"},
     {"etapa": "Entrega 3 (lo que presentamos)", "factor": E3["factor_test"], "rol": "Antes"},
     {"etapa": "Modelo final, sin los datos nuevos", "factor": fac(CTX["sin"]["mae_test"]), "rol": "Antes"},
     {"etapa": "Con los datos nuevos (final)", "factor": fac(CTX["con"]["mae_test"]), "rol": "Modelo final"},
 ])
 recorrido["uno"] = 1.0
 recorrido["mejora"] = 1 - np.log10(recorrido["factor"]) / np.log10(FIN["factor_piso_test"])
-recorrido["txt"] = [S.mult(f, 2) + ("" if i == 0 else f"   ({S.pct(m, 1)} menos que adivinar)")
+recorrido["txt"] = [S.mult(f, 2) + ("" if i == 0 else f"   ({S.pct(m, 1)} menos que la mediana)")
                     for i, (f, m) in enumerate(zip(recorrido["factor"], recorrido["mejora"]))]
 titulo_grafico("El recorrido del error",
-               "Error típico en el mismo examen final (películas de 2017 a 2025). Menos es mejor.")
+               "Error típico en el mismo test (películas de 2017 a 2025). Menos es mejor.")
 # Gráfico: error de test en cada etapa del proyecto.
 #  datos: piso y final de metricas.json["final"], la Entrega 3 presentada (dato histórico) y el modelo final
 #         con y sin las columnas nuevas (metricas.json["contexto"], E.con_y_sin_contexto)
@@ -1241,7 +1241,7 @@ grupos = pd.DataFrame(CTX["grupos"]).sort_values("aporte", ascending=False)
 grupos["lo"], grupos["hi"] = grupos["aporte"] - grupos["desvio"], grupos["aporte"] + grupos["desvio"]
 grupos["txt"] = grupos["aporte"].map(lambda v: S.num(v, 4))
 titulo_grafico("¿Qué dato nuevo aportó más?",
-               "Cuánto empeora el modelo en la práctica si se le saca cada grupo de columnas nuevas.")
+               "Cuánto empeora el modelo en la validación cruzada si se le saca cada grupo de columnas nuevas.")
 # Gráfico: aporte de cada grupo de columnas nuevas (ablación en la validación cruzada).
 #  datos: metricas.json["contexto"]["grupos"] (MAE del Random Forest ajustado sin el grupo − con todas)
 #  marca: barra + regla de ± un desvío entre cortes; mapeo: y = grupo, x = aumento del MAE; color violeta
@@ -1296,7 +1296,7 @@ pc.loc[(pc["mejora"] > 0) & ~pc["supera_ruido"] & ~pc["prueba"].str.contains("tr
 pc["lo"], pc["hi"] = pc["mejora"] - pc["desvio_mejora"], pc["mejora"] + pc["desvio_mejora"]
 pc["txt"] = pc["mejora"].map(lambda v: ("+" if v > 0 else "") + S.num(v, 4))
 titulo_grafico("Lo que se solicitó probar para que no achate",
-               "Cada estrategia contra el Random Forest ajustado, con las mismas 5 pruebas. A la derecha del cero se "
+               "Cada estrategia contra el Random Forest ajustado, con los mismos 5 cortes de la validación cruzada. A la derecha del cero se "
                "equivoca menos; a la izquierda, más.")
 # Gráfico: mejora de cada estrategia contra la referencia (validación cruzada temporal).
 #  datos: metricas.json["pruebas_correccion"] (E.pruebas_correccion: MAE de la referencia − MAE de la prueba, por corte)
@@ -1320,7 +1320,7 @@ mostrar(alt.layer(
     alt.Chart(pd.DataFrame({"x": [0]})).mark_rule(color=S.TINTA).encode(x="x:Q"),
 ), alto=250)
 st.markdown(
-    "**Estirar** las predicciones y darles **más peso a los extremos** empeoran en las 5 pruebas: aciertan un poco más en "
+    "**Estirar** las predicciones y darles **más peso a los extremos** empeoran en los 5 cortes de la validación cruzada: aciertan un poco más en "
     "las puntas, pero se equivocan mucho más en el medio, donde está la mayoría. **Huber** empata. **«Pertenece a una "
     "saga»** es la que más mejora, pero es trampa: TMDb arma la saga cuando sale una secuela, y la secuela sale si a la "
     "primera le fue bien. Por eso solo usamos **«es secuela»**, que sí se sabe antes del estreno.")
@@ -1343,13 +1343,13 @@ Sin historia (un director debutante, la primera de una saga) se completa con la 
 
 **Con y sin, en números** (mismo modelo final, mismo pipeline, misma semilla; `E.con_y_sin_contexto`):
 
-| | Validación (MAE · R²) | Examen final (MAE · factor · R²) |
+| | Validación (MAE · R²) | Test (MAE · factor · R²) |
 |---|---|---|
 | Sin las columnas nuevas | {S.num(CTX['sin']['mae_cv'], 4)} · {S.num(CTX['sin']['r2_cv'], 3)} | {S.num(CTX['sin']['mae_test'], 4)} · {S.mult(fac(CTX['sin']['mae_test']))} · {S.num(CTX['sin']['r2_test'], 3)} |
 | Con las columnas nuevas | {S.num(CTX['con']['mae_cv'], 4)} · {S.num(CTX['con']['r2_cv'], 3)} | {S.num(CTX['con']['mae_test'], 4)} · {S.mult(fac(CTX['con']['mae_test']))} · {S.num(CTX['con']['r2_test'], 3)} |
 
 En la validación, la mejora es {S.num(CTX['mejora_cv']['media'], 4)} con un desvío de {S.num(CTX['mejora_cv']['desvio'], 4)}
-({CTX['mejora_cv']['cortes_gana']} cortes). En el examen final, el error baja un {S.pct(mejora_ctx_pct, 1)}.
+({CTX['mejora_cv']['cortes_gana']} cortes). En el test, el error baja un {S.pct(mejora_ctx_pct, 1)}.
 
 **Las correcciones de la primera ronda** (5 y 8/11), que ya estaban antes de las columnas nuevas:
 - Columnas que combinan datos que ya teníamos: director × protagonista (`power_pack`, la segunda que más pesa), el
